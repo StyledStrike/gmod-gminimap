@@ -1,0 +1,178 @@
+GMinimap:SetCanSeePlayerBlips( true )
+
+-- enable when all entities are ready
+hook.Add( "InitPostEntity", "GMinimap.Init", function()
+    if GMinimap.Config.enable then
+        GMinimap:Activate()
+    end
+end )
+
+-- enable on autorefresh, used during development
+if IsValid( LocalPlayer() ) and GMinimap.Config.enable then
+    timer.Simple( 1, function()
+        GMinimap:Activate()
+    end )
+end
+
+--[[
+    All the code below is for the built-in minimap
+]]
+
+function GMinimap:Activate()
+    if self.radar then
+        self:Deactivate()
+    end
+
+    self.radar = GMinimap.CreateRadar()
+    self:UpdateLayout()
+
+    hook.Add( "Think", "GMinimap.Think", function()
+        self:Think()
+    end )
+
+    hook.Add( "HUDPaint", "GMinimap.Draw", function()
+        self:Draw()
+    end )
+
+    hook.Add( "StartChat", "GMinimap.DetectOpenChat", function()
+        if self.isExpanded then
+            self.isExpanded = false
+            self:UpdateLayout()
+        end
+    end )
+end
+
+function GMinimap:Deactivate()
+    hook.Remove( "Think", "GMinimap.Think" )
+    hook.Remove( "HUDPaint", "GMinimap.Draw" )
+    hook.Remove( "StartChat", "GMinimap.DetectOpenChat" )
+    hook.Remove( "HUDShouldDraw", "GMinimap.HideHUDItems" )
+
+    self.radar:Destroy()
+    self.radar = nil
+end
+
+function GMinimap:UpdateLayout()
+    if not self.radar then return end
+
+    local config = self.Config
+    local screenW, screenH = ScrW(), ScrH()
+
+    local w = self.isExpanded and config.width * 1.5 or config.width
+    local h = self.isExpanded and config.height * 1.8 or config.height
+
+    w = screenH * w
+    h = screenH * h
+
+    local x = ( screenW * config.x ) - ( w * config.x )
+    local y = ( screenH * config.y ) - ( h * config.y )
+
+    if config.showCustomHealth then
+        self.bar = {
+            x = x,
+            y = y + h + 1,
+
+            w = ( w * 0.5 ) - 1,
+            h = config.healthHeight,
+
+            hColor = config.healthColor,
+            hColorBg = SDrawUtils.ModifyColorBrightness( config.healthColor, 0.2 ),
+
+            hlowColor = config.lowhealthColor,
+            hlowColorBg = SDrawUtils.ModifyColorBrightness( config.lowhealthColor, 0.2 ),
+
+            aColor = config.armorColor,
+            aColorBg = SDrawUtils.ModifyColorBrightness( config.armorColor, 0.2 ),
+        }
+    else
+        self.bar = nil
+    end
+
+    self.radar.terrain.color = config.terrainColor
+    self.radar.ratio = Either( self.isExpanded, 70, 40 )
+    self.radar.pivotMultY = Either( self.isExpanded, nil, 0.7 )
+    self.radar:SetDimensions( x, y, w, h )
+
+    if config.hideDefaultHealth then
+        local dontDraw = {
+            ["CHudHealth"] = true,
+            ["CHudBattery"] = true
+        }
+
+        hook.Add( "HUDShouldDraw", "GMinimap.HideHUDItems", function( name )
+            if dontDraw[name] then return false end
+        end )
+    else
+        hook.Remove( "HUDShouldDraw", "GMinimap.HideHUDItems" )
+    end
+end
+
+function GMinimap:Think()
+    local isPressed = input.IsKeyDown( self.Config.expandKey )
+
+    if isPressed ~= self.isExpandKeyPressed then
+        self.isExpandKeyPressed = isPressed
+
+        if isPressed and not vgui.GetKeyboardFocus() then
+            self.isExpanded = not self.isExpanded
+            self:UpdateLayout()
+        end
+    end
+end
+
+local IsValid = IsValid
+local LocalPlayer = LocalPlayer
+
+local m_clamp = math.Clamp
+local SetDrawColor = surface.SetDrawColor
+local DrawRect = surface.DrawRect
+
+function GMinimap:Draw()
+    local thickness = self.Config.borderThickness
+
+    local x, y = self.radar.x, self.radar.y
+    local w, h = self.radar.w, self.radar.h
+
+    SetDrawColor( self.Config.borderColor:Unpack() )
+    DrawRect( x - thickness, y - thickness, w + thickness * 2, h + thickness * 2 )
+
+    self.radar.origin = EyePos()
+    self.radar.rotation = Angle( 0, EyeAngles().y, 0 )
+    self.radar:Draw()
+    self:DrawBlips( self.radar )
+
+    local b = self.bar
+    if not b then return end
+
+    -- health bar
+    local user = LocalPlayer()
+    if not IsValid( user ) then return end
+
+    x, y = self.bar.x, self.bar.y
+    w, h = self.bar.w, self.bar.h
+
+    SetDrawColor( self.Config.borderColor:Unpack() )
+    DrawRect( x - thickness, y - 1 - thickness, 2 + ( w * 2 ) + ( thickness * 2 ), h + 2 + ( thickness * 2 ) )
+
+    local health = m_clamp( user:Health() / user:GetMaxHealth(), 0, 1 )
+    local lowHealth = health < 0.35
+
+    if lowHealth then
+        b.hlowColor.a = 255 * ( 1 - math.fmod( RealTime(), 0.7 ) )
+    end
+
+    SetDrawColor( lowHealth and b.hlowColorBg or b.hColorBg )
+    DrawRect( x, y, b.w, b.h )
+
+    SetDrawColor( lowHealth and b.hlowColor or b.hColor )
+    DrawRect( x, y, b.w * health, b.h )
+
+    -- armor bar
+    local armor = m_clamp( user:Armor() / user:GetMaxArmor(), 0, 1 )
+
+    SetDrawColor( b.aColorBg )
+    DrawRect( x + b.w + 1, y, b.w, b.h )
+
+    SetDrawColor( b.aColor )
+    DrawRect( x + b.w + 1, y, b.w * armor, b.h )
+end
