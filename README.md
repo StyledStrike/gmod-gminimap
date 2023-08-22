@@ -5,7 +5,7 @@ A customizable minimap for your game HUD.
 - Customizable position, size, health/armor, colors and other goodies
 - Bookmark your favorite locations with custom blips
 - Shows other players nearby
-- Semi-realtime map of the terrain, with minimum impact to performance
+- Map of the terrain, with minimum impact to performance
 - Supports custom blips and custom icons (including direct links to images on the internet)
 
 ## For Developers
@@ -17,6 +17,18 @@ A customizable minimap for your game HUD.
 Limits how far players can see other players on the map. Set to 0 to disable player blips.
 
 ### Client-side functions
+
+#### `Player:SetBlipIcon(icon?: string)`
+
+Set the icon path for a player's blip. Can be either a URL or a image file on the materials folder. Use `nil` to restore the default icon.
+
+#### `Player:SetBlipScale(scale?: number)`
+
+Set the icon scale for a player's blip. Use `nil` to restore to default.
+
+#### `Player:SetBlipColor(color?: Color)`
+
+Set the icon color for a player's blip. Use `nil` to restore to default.
 
 #### `GMinimap:SetCanSeePlayerBlips(canSee: boolean)`
 
