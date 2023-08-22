@@ -1,5 +1,7 @@
 ## GMinimap
 
+[![GLuaLint](https://github.com/StyledStrike/gmod-gminimap/actions/workflows/glualint.yml/badge.svg)](https://github.com/FPtje/GLuaFixer)
+
 A customizable minimap for your game HUD.
 
 - Customizable position, size, health/armor, colors and other goodies
