@@ -11,12 +11,12 @@ function Config:Reset()
     -- take the width and height into consideration. This means that, for example,
     -- when y is 0, the top of the radar aligns with the top of the screen, whereas
     -- when y is 1, the bottom of the radar aligns with the bottom of the screen.
-    self.x = 0.99
-    self.y = 0.5
+    self.x = 0.5
+    self.y = 0.01
 
     -- sizes are relative to the screen height
-    self.width = 0.3
-    self.height = 0.2
+    self.width = 0.35
+    self.height = 0.12
 
     self.borderColor = Color( 0, 0, 0, 255 )
     self.borderThickness = 2
@@ -38,33 +38,6 @@ function Config:Reset()
     self.armorColor = Color( 70, 144, 180 )
 end
 
-local function ValidateNumber( n, min, max )
-    return math.Clamp( tonumber( n ) or 0, min, max )
-end
-
-function Config:SetNumber( key, value, min, max )
-    if value then
-        self[key] = ValidateNumber( value, min, max )
-    end
-end
-
-function Config:SetColor( key, r, g, b )
-    if r or g or b then
-        self[key] = Color(
-            ValidateNumber( r or 255, 0, 255 ),
-            ValidateNumber( g or 255, 0, 255 ),
-            ValidateNumber( b or 255, 0, 255 ),
-            255
-        )
-    end
-end
-
-function Config:SetBool( key, value )
-    if value then
-        self[key] = tobool( value )
-    end
-end
-
 function Config:Load()
     self:Reset()
 
@@ -73,30 +46,32 @@ function Config:Load()
     local rawData = file.Read( GMinimap.dataFolder .. "config.json", "DATA" ) or ""
     local data = util.JSONToTable( rawData ) or {}
 
-    self:SetBool( "enable", data.enable )
-    self:SetNumber( "expandKey", data.expandKey, KEY_FIRST, BUTTON_CODE_LAST )
+    local SetNumber, SetBool, SetColor = GMinimap.SetNumber, GMinimap.SetBool, GMinimap.SetColor
 
-    self:SetNumber( "x", data.x, 0, 1 )
-    self:SetNumber( "y", data.y, 0, 1 )
-    self:SetNumber( "width", data.width, 0, 1 )
-    self:SetNumber( "height", data.height, 0, 1 )
+    SetBool( self, "enable", data.enable )
+    SetNumber( self, "expandKey", data.expandKey, KEY_FIRST, BUTTON_CODE_LAST )
 
-    self:SetColor( "borderColor", data.borderR, data.borderG, data.borderB )
-    self:SetNumber( "borderThickness", data.borderThickness, 0, 16 )
+    SetNumber( self, "x", data.x, 0, 1 )
+    SetNumber( self, "y", data.y, 0, 1 )
+    SetNumber( self, "width", data.width, 0, 1 )
+    SetNumber( self, "height", data.height, 0, 1 )
 
-    self:SetColor( "terrainColor", data.terrainR, data.terrainG, data.terrainB )
-    self:SetNumber( "terrainBrightness", data.terrainBrightness, -1, 1 )
-    self:SetNumber( "terrainColorMult", data.terrainColorMult, 0, 2 )
-    self:SetNumber( "terrainColorInv", data.terrainColorInv, 0, 1 )
-    self:SetBool( "terrainLighting", data.terrainLighting )
+    SetColor( self, "borderColor", data.borderR, data.borderG, data.borderB )
+    SetNumber( self, "borderThickness", data.borderThickness, 0, 16 )
 
-    self:SetBool( "hideDefaultHealth", data.hideDefaultHealth )
-    self:SetBool( "showCustomHealth", data.showCustomHealth )
-    self:SetNumber( "healthHeight", data.healthHeight, 2, 32 )
+    SetColor( self, "terrainColor", data.terrainR, data.terrainG, data.terrainB )
+    SetNumber( self, "terrainBrightness", data.terrainBrightness, -1, 1 )
+    SetNumber( self, "terrainColorMult", data.terrainColorMult, 0, 2 )
+    SetNumber( self, "terrainColorInv", data.terrainColorInv, 0, 1 )
+    SetBool( self, "terrainLighting", data.terrainLighting )
 
-    self:SetColor( "healthColor", data.healthR, data.healthG, data.healthB )
-    self:SetColor( "lowhealthColor", data.lowhealthR, data.lowhealthG, data.lowhealthB )
-    self:SetColor( "armorColor", data.armorR, data.armorG, data.armorB )
+    SetBool( self, "hideDefaultHealth", data.hideDefaultHealth )
+    SetBool( self, "showCustomHealth", data.showCustomHealth )
+    SetNumber( self, "healthHeight", data.healthHeight, 2, 32 )
+
+    SetColor( self, "healthColor", data.healthR, data.healthG, data.healthB )
+    SetColor( self, "lowhealthColor", data.lowhealthR, data.lowhealthG, data.lowhealthB )
+    SetColor( self, "armorColor", data.armorR, data.armorG, data.armorB )
 end
 
 function Config:Save()
@@ -145,21 +120,6 @@ end
 
 Config:Load()
 
-concommand.Add( "gminimap_config", function()
-    Config:OpenPanel()
-end )
-
-hook.Add( "AddToolMenuCategories", "GMinimap.AddConfigCategory", function()
-    spawnmenu.AddToolCategory( "Utilities", "GMinimap", "#gminimap.name" )
-end )
-
-hook.Add( "PopulateToolMenu", "GMinimap.AddConfigMenu", function()
-    spawnmenu.AddToolMenuOption( "Utilities", "GMinimap", "GMinimap_Config", "#gminimap.configure", "", "", function( panel )
-        panel:ClearControls()
-        panel:Button( "#gminimap.configure_minimap", "gminimap_config" )
-    end )
-end )
-
 function Config:OpenPanel()
     if IsValid( self.frame ) then
         self.frame:Close()
@@ -170,6 +130,7 @@ function Config:OpenPanel()
 
     local frame = vgui.Create( "DFrame" )
     frame:SetTitle( "#gminimap.configure_minimap" )
+    frame:SetIcon( "icon16/cog.png" )
     frame:SetDraggable( true )
     frame:SetSize( 500, 400 )
     frame:SetDeleteOnClose( true )

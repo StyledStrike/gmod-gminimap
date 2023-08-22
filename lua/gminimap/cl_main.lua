@@ -1,5 +1,25 @@
 GMinimap:SetCanSeePlayerBlips( true )
 
+concommand.Add( "gminimap_config", function()
+    GMinimap.Config:OpenPanel()
+end )
+
+concommand.Add( "gminimap_landmarks", function()
+    GMinimap:OpenLandmarks()
+end )
+
+hook.Add( "AddToolMenuCategories", "GMinimap.AddConfigCategory", function()
+    spawnmenu.AddToolCategory( "Utilities", "GMinimap", "#gminimap.name" )
+end )
+
+hook.Add( "PopulateToolMenu", "GMinimap.AddConfigMenu", function()
+    spawnmenu.AddToolMenuOption( "Utilities", "GMinimap", "GMinimap_Config", "#gminimap.configure", "", "", function( panel )
+        panel:ClearControls()
+        panel:Button( "#gminimap.configure_minimap", "gminimap_config" )
+        panel:Button( "#gminimap.landmarks", "gminimap_landmarks" )
+    end )
+end )
+
 -- enable when all entities are ready
 hook.Add( "InitPostEntity", "GMinimap.Init", function()
     if GMinimap.Config.enable then
