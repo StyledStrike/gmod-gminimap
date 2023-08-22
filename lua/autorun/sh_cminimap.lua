@@ -6,10 +6,16 @@ CreateConVar(
     0, 50000
 )
 
-GMinimap = {}
+GMinimap = { dataFolder = "gminimap/" }
 
 function GMinimap.LogF( str, ... )
     MsgC( Color( 42, 180, 0 ), "[Custom Minimap] ", color_white, string.format( str, ... ), "\n" )
+end
+
+function GMinimap.EnsureDataFolder()
+    if not file.Exists( GMinimap.dataFolder, "DATA" ) then
+        file.CreateDir( GMinimap.dataFolder )
+    end
 end
 
 if SERVER then

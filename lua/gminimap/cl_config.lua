@@ -39,17 +39,17 @@ function Config:Reset()
 end
 
 local function ValidateNumber( n, min, max )
-    return math.Clamp( tonumber( n ), min, max )
+    return math.Clamp( tonumber( n ) or 0, min, max )
 end
 
 function Config:SetNumber( key, value, min, max )
-    if key then
+    if value then
         self[key] = ValidateNumber( value, min, max )
     end
 end
 
 function Config:SetColor( key, r, g, b )
-    if key then
+    if r or g or b then
         self[key] = Color(
             ValidateNumber( r or 255, 0, 255 ),
             ValidateNumber( g or 255, 0, 255 ),
@@ -59,13 +59,21 @@ function Config:SetColor( key, r, g, b )
     end
 end
 
+function Config:SetBool( key, value )
+    if value then
+        self[key] = tobool( value )
+    end
+end
+
 function Config:Load()
     self:Reset()
 
-    local rawData = file.Read( "gminimap.json", "DATA" ) or ""
+    GMinimap.EnsureDataFolder()
+
+    local rawData = file.Read( GMinimap.dataFolder .. "config.json", "DATA" ) or ""
     local data = util.JSONToTable( rawData ) or {}
 
-    self.enable = tobool( data.enable )
+    self:SetBool( "enable", data.enable )
     self:SetNumber( "expandKey", data.expandKey, KEY_FIRST, BUTTON_CODE_LAST )
 
     self:SetNumber( "x", data.x, 0, 1 )
@@ -80,10 +88,10 @@ function Config:Load()
     self:SetNumber( "terrainBrightness", data.terrainBrightness, -1, 1 )
     self:SetNumber( "terrainColorMult", data.terrainColorMult, 0, 2 )
     self:SetNumber( "terrainColorInv", data.terrainColorInv, 0, 1 )
-    self.terrainLighting = tobool( data.terrainLighting )
+    self:SetBool( "terrainLighting", data.terrainLighting )
 
-    self.hideDefaultHealth = tobool( data.hideDefaultHealth )
-    self.showCustomHealth = tobool( data.showCustomHealth )
+    self:SetBool( "hideDefaultHealth", data.hideDefaultHealth )
+    self:SetBool( "showCustomHealth", data.showCustomHealth )
     self:SetNumber( "healthHeight", data.healthHeight, 2, 32 )
 
     self:SetColor( "healthColor", data.healthR, data.healthG, data.healthB )
@@ -132,7 +140,7 @@ function Config:Save()
         armorB = self.armorColor.b
     }, true )
 
-    file.Write( "gminimap.json", data )
+    file.Write( GMinimap.dataFolder .. "config.json", data )
 end
 
 Config:Load()
