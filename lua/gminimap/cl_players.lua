@@ -48,6 +48,10 @@ local colors = {
     dead = Color( 0, 0, 0 )
 }
 
+local scales = {
+    vehicle = 1.25
+}
+
 local function GetState( ply )
     if not ply:Alive() then
         return "dead"
@@ -66,7 +70,7 @@ local function GetIcon( ply, state )
     end
 
     if icons[state] then
-        return icons[state], ply._GMinimapBlipScale, true
+        return icons[state], ply._GMinimapBlipScale or scales[state], true
     end
 
     return nil, ply._GMinimapBlipScale
