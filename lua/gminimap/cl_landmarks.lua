@@ -205,7 +205,7 @@ function GMinimap:OpenLandmarks()
             r = color.r,
             g = color.g,
             b = color.b,
-            scale = 1.25
+            scale = 1.5
         }
 
         self.landmarks[index] = landmark
