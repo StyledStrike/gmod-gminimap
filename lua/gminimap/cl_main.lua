@@ -77,9 +77,10 @@ function GMinimap:UpdateLayout()
 
     local config = self.Config
     local screenW, screenH = ScrW(), ScrH()
+    local expandedSize = math.max( config.width, config.height ) * 1.5
 
-    local w = self.isExpanded and config.width * 1.5 or config.width
-    local h = self.isExpanded and config.height * 1.8 or config.height
+    local w = self.isExpanded and expandedSize or config.width
+    local h = self.isExpanded and expandedSize or config.height
 
     w = screenH * w
     h = screenH * h
