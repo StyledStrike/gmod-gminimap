@@ -1,14 +1,21 @@
 GMinimap.landmarks = GMinimap.landmarks or {}
+GMinimap.landmarkBlips = GMinimap.landmarkBlips or {}
 
-local function UpdateLandmarkBlip( l, index )
-    GMinimap:AddBlip( {
-        id = "gminimap_landmark_" .. index,
-        icon = l.icon,
-        color = Color( l.r, l.g, l.b ),
-        lockIconAng = true,
-        position = Vector( l.x, l.y, 0 ),
-        scale = l.scale
-    } )
+local function RefreshLandmarkBlips()
+    for i, _ in ipairs( GMinimap.landmarkBlips ) do
+        GMinimap:RemoveBlipById( "gminimap_landmark_" .. i )
+    end
+
+    for i, l in ipairs( GMinimap.landmarks ) do
+        GMinimap.landmarkBlips[i] = GMinimap:AddBlip( {
+            id = "gminimap_landmark_" .. i,
+            icon = l.icon,
+            color = Color( l.r, l.g, l.b ),
+            lockIconAng = true,
+            position = Vector( l.x, l.y, 0 ),
+            scale = l.scale
+        } )
+    end
 end
 
 local function GetLandmarkFileName()
@@ -58,8 +65,9 @@ local function LoadLandmarks()
         SetNumber( landmark, "b", v.b, 0, 255 )
 
         GMinimap.landmarks[i] = landmark
-        UpdateLandmarkBlip( landmark, i )
     end
+
+    RefreshLandmarkBlips()
 end
 
 LoadLandmarks()
@@ -75,6 +83,7 @@ function GMinimap:OpenLandmarks()
     local frame = vgui.Create( "DFrame" )
     frame:SetTitle( "#gminimap.landmarks" )
     frame:SetIcon( "icon16/flag_blue.png" )
+    frame:SetSizable( false )
     frame:SetDraggable( true )
     frame:SetSize( 700, 500 )
     frame:SetDeleteOnClose( true )
@@ -93,6 +102,8 @@ function GMinimap:OpenLandmarks()
     end
 
     function OnLandmarksChanged()
+        RefreshLandmarkBlips()
+
         -- prevent spamming the file system
         timer.Remove( "CMinimap.SaveLandmarksDelay" )
         timer.Create( "CMinimap.SaveLandmarksDelay", 1, 1, SaveLandmarks )
@@ -199,7 +210,6 @@ function GMinimap:OpenLandmarks()
 
         self.landmarks[index] = landmark
 
-        UpdateLandmarkBlip( landmark, index )
         AddLandmarkLine( index, landmark, true )
         OnLandmarksChanged()
     end
@@ -256,7 +266,6 @@ function GMinimap:OpenLandmarks()
         editing.line._panelIcon._icon = path
 
         OnLandmarksChanged()
-        UpdateLandmarkBlip( editing.landmark, editing.index )
     end
 
     local selBuiltinButton = vgui.Create( "DButton", editIconPanel )
@@ -318,7 +327,7 @@ function GMinimap:OpenLandmarks()
 
     editScaleSlider.OnValueChanged = function( _, value )
         editing.landmark.scale = value
-        UpdateLandmarkBlip( editing.landmark, editing.index )
+        OnLandmarksChanged()
     end
 
     local editColor = vgui.Create( "DColorMixer", editPanel )
@@ -338,7 +347,6 @@ function GMinimap:OpenLandmarks()
         editing.line._panelIcon._color = Color( c.r, c.g, c.b )
 
         OnLandmarksChanged()
-        UpdateLandmarkBlip( editing.landmark, editing.index )
     end
 
     local function StopEditing()
@@ -365,9 +373,7 @@ function GMinimap:OpenLandmarks()
 
         Derma_Query( str, "#gminimap.landmark_remove", "#gminimap.yes", function()
             StopEditing()
-
-            table.remove( GMinimap.landmarks, index )
-            GMinimap:RemoveBlipById( "gminimap_landmark_" .. index )
+            table.remove( self.landmarks, index )
 
             UpdateLandmarksList()
             OnLandmarksChanged()
