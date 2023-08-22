@@ -27,6 +27,7 @@ if SERVER then
     AddCSLuaFile( "gminimap/cl_terrain.lua" )
     AddCSLuaFile( "gminimap/cl_radar.lua" )
     AddCSLuaFile( "gminimap/cl_players.lua" )
+    AddCSLuaFile( "gminimap/cl_landmarks.lua" )
     AddCSLuaFile( "gminimap/cl_main.lua" )
 
     include( "gminimap/sv_main.lua" )
@@ -41,5 +42,6 @@ if CLIENT then
     include( "gminimap/cl_terrain.lua" )
     include( "gminimap/cl_radar.lua" )
     include( "gminimap/cl_players.lua" )
+    include( "gminimap/cl_landmarks.lua" )
     include( "gminimap/cl_main.lua" )
 end
