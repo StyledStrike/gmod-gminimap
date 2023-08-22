@@ -42,11 +42,11 @@ function Radar:SetDimensions( x, y, w, h )
     self:UpdateLayout()
 end
 
--- converts a 3D, world position to a 2D,
--- pixel position relative to the radar
 local Clamp = math.Clamp
 local WorldToLocal = WorldToLocal
 
+-- converts a 3D, world position to a 2D,
+-- pixel position relative to the radar
 function Radar:WorldToLocal( pos, ang )
     -- make pos relative to the radar plane
     pos, ang = WorldToLocal( pos, ang, self.origin, self.rotation )
@@ -61,6 +61,19 @@ function Radar:WorldToLocal( pos, ang )
     x, y = Clamp( x, self.x, self.x + self.w ), Clamp( y, self.y, self.y + self.h )
 
     return x, y, -ang.y
+end
+
+local LocalToWorld = LocalToWorld
+
+-- converts a 2D, pixel position to a 3D, world position
+function Radar:LocalToWorld( x, y )
+    local pos = Vector( self.pivotY - y, self.pivotX - x, 0 ) * self.ratio
+
+    -- make pos relative to the radar plane
+    pos = LocalToWorld( pos, Angle(), self.origin, self.rotation )
+    pos.z = 0
+
+    return pos
 end
 
 function Radar:Draw()
