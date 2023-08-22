@@ -102,6 +102,32 @@ function GMinimap:OpenLandmarks()
         return landmark.label or math.Round( landmark.x, 2 ) .. " / " .. math.Round( landmark.y, 2 )
     end
 
+    local function PaintDarkBackground( _, w, h )
+        surface.SetDrawColor( 50, 50, 50, 255 )
+        surface.DrawRect( 0, 0, w, h )
+    end
+
+    local helpPanel = vgui.Create( "DPanel", frame )
+    helpPanel:SetTall( 50 )
+    helpPanel:Dock( BOTTOM )
+    helpPanel.Paint = PaintDarkBackground
+
+    local helpLabel1 = vgui.Create( "DLabel", helpPanel )
+    helpLabel1:SetAutoStretchVertical( true )
+    helpLabel1:SetText( "#gminimap.landmarks_help1" )
+    helpLabel1:SetFont( "ChatFont" )
+    helpLabel1:SetColor( color_white )
+    helpLabel1:Dock( TOP )
+    helpLabel1:DockMargin( 4, 12, 4, 4 )
+
+    local helpLabel2 = vgui.Create( "DLabel", helpPanel )
+    helpLabel2:SetAutoStretchVertical( true )
+    helpLabel2:SetText( "#gminimap.landmarks_help2" )
+    helpLabel2:SetFont( "ChatFont" )
+    helpLabel2:SetColor( color_white )
+    helpLabel2:Dock( BOTTOM )
+    helpLabel2:DockMargin( 4, 4, 4, 4 )
+
     ---------- map terrain panel ----------
 
     local mapPanel = vgui.Create( "DPanel", frame )
@@ -201,11 +227,7 @@ function GMinimap:OpenLandmarks()
     editPanel:DockPadding( 4, 12, 4, 4 )
     editPanel:SetOpenSize( 260 )
     editPanel:SetOpenTime( 0.2 )
-
-    editPanel.Paint = function( _, w, h )
-        surface.SetDrawColor( 50, 50, 50, 255 )
-        surface.DrawRect( 0, 0, w, h )
-    end
+    editPanel.Paint = PaintDarkBackground
 
     local editLabelEntry = vgui.Create( "DTextEntry", editPanel )
     editLabelEntry:Dock( TOP )
@@ -385,16 +407,13 @@ function GMinimap:OpenLandmarks()
 
     ---------- map terrain rendering & input ----------
 
-    mapPanel.PaintOver = function( s, _, h )
+    mapPanel.PaintOver = function( s )
         local x, y = s:LocalToScreen( 0, 0 )
 
         radar.x = x
         radar.y = y
         radar:Draw()
         self:DrawBlips( radar )
-
-        draw.SimpleTextOutlined( "#gminimap.landmarks_help1", "ChatFont", 4, h - 16, nil, nil, nil, 1, color_black )
-        draw.SimpleTextOutlined( "#gminimap.landmarks_help2", "ChatFont", 4, h - 30, nil, nil, nil, 1, color_black )
 
         if s._originStart then
             x, y = input.GetCursorPos()
