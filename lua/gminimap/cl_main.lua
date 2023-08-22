@@ -89,7 +89,7 @@ function GMinimap:UpdateLayout()
     end
 
     self.radar.terrain.color = config.terrainColor
-    self.radar.ratio = Either( self.isExpanded, 70, 40 )
+    self.radar.ratio = Either( self.isExpanded, 50, 40 )
     self.radar.pivotMultY = Either( self.isExpanded, nil, 0.7 )
     self.radar:SetDimensions( x, y, w, h )
 

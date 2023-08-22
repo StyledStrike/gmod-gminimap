@@ -22,6 +22,8 @@ if SERVER then
     AddCSLuaFile( "gminimap/cl_radar.lua" )
     AddCSLuaFile( "gminimap/cl_players.lua" )
     AddCSLuaFile( "gminimap/cl_main.lua" )
+
+    include( "gminimap/sv_main.lua" )
 end
 
 if CLIENT then
