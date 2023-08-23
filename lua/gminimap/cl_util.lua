@@ -1,3 +1,13 @@
+local mapDimensions = GMinimap.mapDimensions or {}
+
+GMinimap.mapDimensions = mapDimensions
+
+-- default map dimension overrides
+do
+    mapDimensions["gm_bigcity_improved"] = { min = -13600, max = 2500 }
+    mapDimensions["gm_bigcity_improved_lite"] = { min = -13600, max = 2500 }
+end
+
 local function ValidateNumber( n, min, max )
     return math.Clamp( tonumber( n ) or 0, min, max )
 end
@@ -24,8 +34,6 @@ function GMinimap.SetColor( tbl, key, r, g, b )
         )
     end
 end
-
-local mapDimensions = {}
 
 net.Receive( "gminimap.world_heights", function()
     if mapDimensions[game.GetMap()] then return end
