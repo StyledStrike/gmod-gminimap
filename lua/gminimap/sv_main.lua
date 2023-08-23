@@ -8,6 +8,9 @@ GMinimap.mapHeights = mapHeights
 do
     mapHeights["gm_bigcity_improved"] = { min = -13600, max = 2500 }
     mapHeights["gm_bigcity_improved_lite"] = { min = -13600, max = 2500 }
+    mapHeights["gm_genesis"] = { min = -9000, max = 1000 }
+    mapHeights["gm_excess_construct_13"] = { min = -4000, max = 3000 }
+    mapHeights["rp_rudmerge"] = { min = -400, max = 9500 }
 end
 
 local minHeight, maxHeight = -5000, 5000
