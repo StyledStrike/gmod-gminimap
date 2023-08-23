@@ -16,7 +16,8 @@ function GMinimap.CreateTerrain()
         lastGridX = -1,
         lastGridY = -1,
         lastCapturePos = Vector(),
-        color = Color( 255, 255, 255 )
+        color = Color( 255, 255, 255 ),
+        voidColor = Color( 50, 50, 50 )
     }
 
     return setmetatable( instance, Terrain )
@@ -43,6 +44,8 @@ function Terrain:SetHeights( minZ, maxZ )
     self.maxZ = maxZ or self.maxZ
     self:ResetCapture()
 end
+
+local Vector, Angle = Vector, Angle
 
 function Terrain:Capture( origin )
     if self.capturing then return end
@@ -89,6 +92,27 @@ function Terrain:Capture( origin )
             bottom = self.area
         }
     } )
+
+    cam.Start( {
+        type = "3D",
+        x = 0,
+        y = 0,
+        w = 1024,
+        h = 1024,
+        origin = origin,
+        angles = Angle( 90, 0, 0 ),
+        ortho = {
+            top = -self.area,
+            left = -self.area,
+            right = self.area,
+            bottom = self.area
+        }
+    } )
+
+    origin.z = self.minZ
+    render.DrawBox( origin, Angle(), Vector( -self.area, -self.area, -1 ), Vector( self.area, self.area, 1 ), self.voidColor, true )
+
+    cam.End3D()
 
     DrawColorModify( {
         ["$pp_colour_addr"] = 0,
