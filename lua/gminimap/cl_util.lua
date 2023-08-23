@@ -1,3 +1,11 @@
+local ratioOverrides = GMinimap.ratioOverrides or {}
+
+ratioOverrides["gm_ame"] = 10
+ratioOverrides["gm_aistruct"] = 10
+ratioOverrides["gm_amber_metro"] = 10
+ratioOverrides["gm_abandoned_ascot_mall"] = 15
+
+GMinimap.ratioOverrides = ratioOverrides
 
 local function ValidateNumber( n, min, max )
     return math.Clamp( tonumber( n ) or 0, min, max )
@@ -51,4 +59,28 @@ function GMinimap.GetWorldZDimensions()
     end
 
     return -5000, 5000
+end
+
+function GMinimap.GetWorldZoomRatio()
+    local override = ratioOverrides[game.GetMap()]
+    if override then return override end
+
+    -- try to figure out the best zoom level for this map
+    local world = game.GetWorld()
+
+    if world and world.GetModelBounds then
+        local mins, maxs = world:GetModelBounds()
+
+        local sizex = maxs.x + math.abs( mins.x )
+        local sizey = maxs.y + math.abs( mins.y )
+
+        local avg = ( sizex + sizey ) * 0.5
+        local ratio = ( avg / 25000 ) * 50
+
+        ratioOverrides[game.GetMap()] = ratio
+
+        return ratio
+    end
+
+    return 50
 end

@@ -94,7 +94,7 @@ function GMinimap:OpenLandmarks()
 
     local radar = GMinimap.CreateRadar()
     radar.origin = LocalPlayer():GetPos()
-    radar.ratio = 50
+    radar.ratio = GMinimap.GetWorldZoomRatio()
 
     frame.OnClose = function()
         radar:Destroy()
@@ -393,7 +393,7 @@ function GMinimap:OpenLandmarks()
 
         if not bmkList._selectedByAdding then
             radar.origin = Vector( editing.landmark.x, editing.landmark.y, 0 )
-            radar.ratio = 20
+            radar.ratio = GMinimap.GetWorldZoomRatio() * 0.25
             mapPanel:InvalidateLayout()
         end
 
@@ -458,7 +458,8 @@ function GMinimap:OpenLandmarks()
     end
 
     mapPanel.OnMouseWheeled = function( _, delta )
-        radar.ratio = math.Clamp( radar.ratio - delta * 5, 20, 50 )
+        local baseRatio = GMinimap.GetWorldZoomRatio()
+        radar.ratio = math.Clamp( radar.ratio - delta * 5, baseRatio * 0.2, baseRatio )
         mapPanel:InvalidateLayout()
     end
 end

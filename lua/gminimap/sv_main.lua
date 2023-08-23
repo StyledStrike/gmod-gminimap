@@ -11,6 +11,9 @@ do
     mapHeights["gm_genesis"] = { min = -9000, max = 1000 }
     mapHeights["gm_excess_construct_13"] = { min = -4000, max = 3000 }
     mapHeights["rp_rudmerge"] = { min = -400, max = 9500 }
+
+    mapHeights["gm_abyssalplain"] = { min = -1000, max = 16800 }
+    mapHeights["gm_aistruct"] = { min = 100, max = 3000 }
 end
 
 local minHeight, maxHeight = -5000, 5000
