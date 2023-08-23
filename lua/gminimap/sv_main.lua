@@ -1,6 +1,15 @@
 
 util.AddNetworkString( "gminimap.world_heights" )
 
+local mapHeights = GMinimap.mapHeights or {}
+GMinimap.mapHeights = mapHeights
+
+-- default map dimension overrides
+do
+    mapHeights["gm_bigcity_improved"] = { min = -13600, max = 2500 }
+    mapHeights["gm_bigcity_improved_lite"] = { min = -13600, max = 2500 }
+end
+
 local minHeight, maxHeight = -5000, 5000
 
 local function GetWorldHeights()
@@ -9,14 +18,47 @@ local function GetWorldHeights()
     -- not sure this can ever happen, but better safe than sorry
     if not world or not world.GetModelBounds then
         GMinimap.LogF( "Unable to find the world heights, terrain might not render correctly!" )
-        return minHeight, maxHeight
+        return minHeight, maxHeight, 0
     end
 
     local mins, maxs = world:GetModelBounds()
     return mins.z, maxs.z, world:OBBCenter().z
 end
 
+local function TraceLineWorld( pos, dir, dist )
+    return util.TraceLine( {
+        start = pos,
+        endpos = pos + dir * dist,
+        filter = ents.GetAll(),
+        mask = MASK_SOLID_BRUSHONLY,
+        collisiongroup = COLLISION_GROUP_WORLD,
+        ignoreworld = false
+    } )
+end
+
+-- given a position that is not in the void,
+-- use a line trace to find the lowest point
+local function GetFloor( pos )
+    local tr = TraceLineWorld( pos, Vector( 0, 0, -1 ), 10000 )
+
+    if tr.Hit then
+        return tr.HitPos.z
+    end
+
+    return pos.z
+end
+
 hook.Add( "InitPostEntity", "GMinimap.CalculateWorldSize", function()
+    local map = game.GetMap()
+    local heights = mapHeights[map]
+
+    -- prefer the hardcoded heights over what about to be done below
+    if heights then
+        minHeight, maxHeight = heights.min, heights.max
+
+        return
+    end
+
     local minZ, maxZ, centerZ = GetWorldHeights()
 
     -- try to find the skybox camera, its location
@@ -34,8 +76,18 @@ hook.Add( "InitPostEntity", "GMinimap.CalculateWorldSize", function()
 
     -- if the skybox is above the map
     if camZ > centerZ then
-        -- make the highest point a bit below it
-        maxZ = camZ - 1000
+        -- try to find the skybox dimensions
+        local skyCamPos = skyCam:GetPos()
+
+        -- find where the skybox floor is
+        local skyFloorZ = GetFloor( skyCamPos ) - 50
+
+        -- try to find where the void below the skybox ends going down
+        local belowSkybox = Vector( skyCamPos.x, skyCamPos.y, skyFloorZ )
+        local tr = TraceLineWorld( belowSkybox, Vector( 0, 0, -1 ), 10000 )
+
+        local endPos = Vector( belowSkybox.x, belowSkybox.y, belowSkybox.z - 10000 * tr.Fraction )
+        maxZ = endPos.z - 200
     else
         -- the skybox is under the map,
         -- so make the lowest point a bit above it
