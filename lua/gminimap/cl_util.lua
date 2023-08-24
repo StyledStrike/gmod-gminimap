@@ -18,9 +18,7 @@ function GMinimap.SetNumber( tbl, key, value, min, max )
 end
 
 function GMinimap.SetBool( tbl, key, value )
-    if value then
-        tbl[key] = tobool( value )
-    end
+    tbl[key] = tobool( value )
 end
 
 function GMinimap.SetColor( tbl, key, r, g, b )
