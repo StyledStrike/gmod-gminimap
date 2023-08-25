@@ -55,8 +55,22 @@ function Terrain:Capture( origin )
 
     local noDrawHookId = "GMinimap.CaptureNoDraw_" .. self.rtId
 
-    hook.Add( "PreDrawSkyBox", noDrawHookId, function()
+    hook.Add( "PreDrawOpaqueRenderables", noDrawHookId, function( isDrawingDepth, isDrawSkybox, isDraw3DSkybox )
+        if isDrawingDepth or isDrawSkybox or isDraw3DSkybox then return end
+
+        render.SetColorMaterial()
+        render.DrawQuadEasy(
+            Vector( origin.x, origin.y, self.minZ ),
+            Vector( 0, 0, 1 ),
+            self.area * 2, self.area * 2,
+            self.voidColor, 0
+        )
+
         return false
+    end )
+
+    hook.Add( "PreDrawSkyBox", noDrawHookId, function()
+        return true
     end )
 
     local haloFunc = hook.GetTable()["PostDrawEffects"]["RenderHalos"]
@@ -95,28 +109,6 @@ function Terrain:Capture( origin )
 
     render.SetLightingMode( 0 )
 
-    cam.Start( {
-        type = "3D",
-        x = 0,
-        y = 0,
-        w = 1024,
-        h = 1024,
-        origin = origin,
-        angles = Angle( 90, 0, 0 ),
-        ortho = {
-            top = -self.area,
-            left = -self.area,
-            right = self.area,
-            bottom = self.area
-        }
-    } )
-
-    origin.z = self.minZ
-
-    render.DrawBox( origin, Angle(), Vector( -self.area, -self.area, -1 ), Vector( self.area, self.area, 1 ), self.voidColor, true )
-
-    cam.End3D()
-
     DrawColorModify( {
         ["$pp_colour_addr"] = 0,
         ["$pp_colour_addg"] = 0,
@@ -132,6 +124,7 @@ function Terrain:Capture( origin )
 
     render.PopRenderTarget()
 
+    hook.Remove( "PreDrawOpaqueRenderables", noDrawHookId )
     hook.Remove( "PreDrawSkyBox", noDrawHookId )
 
     if haloFunc then
