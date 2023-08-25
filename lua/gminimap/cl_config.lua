@@ -228,9 +228,22 @@ function Config:OpenPanel()
 
     ------ radar ------
 
+    local forceX = GetConVar( "gminimap_force_x" ):GetFloat()
+    local forceY = GetConVar( "gminimap_force_y" ):GetFloat()
+    local forceW = GetConVar( "gminimap_force_w" ):GetFloat()
+    local forceH = GetConVar( "gminimap_force_h" ):GetFloat()
+
+    if forceX >= 0 or forceY >= 0 or forceW >= 0 or forceH >= 0 then
+        local rowForceTip = props:CreateRow( "#gminimap.radar", GetHostName() )
+        rowForceTip:Setup( "Generic", {} )
+        rowForceTip:SetValue( language.GetPhrase( "gminimap.forced_config" ) )
+        rowForceTip:SetEnabled( false )
+    end
+
     local rowX = props:CreateRow( "#gminimap.radar", "X" )
     rowX:Setup( "Float", { min = 0, max = 1 } )
     rowX:SetValue( self.x )
+    rowX:SetEnabled( forceX < 0 )
 
     rowX.DataChanged = function( _, val )
         self.x = math.Round( val, 3 )
@@ -240,6 +253,7 @@ function Config:OpenPanel()
     local rowY = props:CreateRow( "#gminimap.radar", "Y" )
     rowY:Setup( "Float", { min = 0, max = 1 } )
     rowY:SetValue( self.y )
+    rowY:SetEnabled( forceY < 0 )
 
     rowY.DataChanged = function( _, val )
         self.y = math.Round( val, 3 )
@@ -249,6 +263,7 @@ function Config:OpenPanel()
     local rowWidth = props:CreateRow( "#gminimap.radar", "#gminimap.width" )
     rowWidth:Setup( "Float", { min = 0.1, max = 0.5 } )
     rowWidth:SetValue( self.width )
+    rowWidth:SetEnabled( forceW < 0 )
 
     rowWidth.DataChanged = function( _, val )
         self.width = math.Round( val, 3 )
@@ -258,6 +273,7 @@ function Config:OpenPanel()
     local rowHeight = props:CreateRow( "#gminimap.radar", "#gminimap.height" )
     rowHeight:Setup( "Float", { min = 0.1, max = 0.5 } )
     rowHeight:SetValue( self.height )
+    rowHeight:SetEnabled( forceH < 0 )
 
     rowHeight.DataChanged = function( _, val )
         self.height = math.Round( val, 3 )

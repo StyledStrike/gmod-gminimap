@@ -1,12 +1,9 @@
-CreateConVar(
-    "gminimap_player_blips_max_distance",
-    "8000",
-    bit.bor( FCVAR_ARCHIVE, FCVAR_REPLICATED, FCVAR_NOTIFY ),
-    "[GMinimap] Limits how far players can see other players on the map. Set to 0 to disable player blips.",
-    0, 50000
-)
-
 GMinimap = { dataFolder = "gminimap/" }
+
+function GMinimap.CreateSharedConvar( name, default, min, max, description )
+    local flags = bit.bor( FCVAR_ARCHIVE, FCVAR_REPLICATED, FCVAR_NOTIFY )
+    CreateConVar( "gminimap_" .. name, default, flags, "[GMinimap] " .. description, min, max )
+end
 
 function GMinimap.LogF( str, ... )
     MsgC( Color( 42, 180, 0 ), "[Custom Minimap] ", color_white, string.format( str, ... ), "\n" )
@@ -17,6 +14,21 @@ function GMinimap.EnsureDataFolder()
         file.CreateDir( GMinimap.dataFolder )
     end
 end
+
+GMinimap.CreateSharedConvar( "player_blips_max_distance", "8000", 0, 50000,
+    "Limits how far players can see other players on the map. Set to 0 to disable player blips." )
+
+GMinimap.CreateSharedConvar( "force_x", "-1", -1, 1,
+    "Force the X position of the minimap on all players. Set to -1 to disable this." )
+
+GMinimap.CreateSharedConvar( "force_y", "-1", -1, 1,
+    "Force the Y position of the minimap on all players. Set to -1 to disable this." )
+
+GMinimap.CreateSharedConvar( "force_w", "-1", -1, 1,
+    "Force the width of the minimap on all players. Set to -1 to disable this." )
+
+GMinimap.CreateSharedConvar( "force_h", "-1", -1, 1,
+    "Force the height of the minimap on all players. Set to -1 to disable this." )
 
 if SERVER then
     AddCSLuaFile( "includes/modules/styled_draw_utils.lua" )

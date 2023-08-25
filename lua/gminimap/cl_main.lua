@@ -20,6 +20,11 @@ hook.Add( "PopulateToolMenu", "GMinimap.AddConfigMenu", function()
     end )
 end )
 
+net.Receive( "gminimap.force_cvar_changed", function()
+    GMinimap.LogF( "Server is forcing cvars" )
+    GMinimap:UpdateLayout()
+end )
+
 -- enable when all entities are ready
 hook.Add( "InitPostEntity", "GMinimap.Init", function()
     if GMinimap.Config.enable then
@@ -77,16 +82,29 @@ function GMinimap:UpdateLayout()
 
     local config = self.Config
     local screenW, screenH = ScrW(), ScrH()
-    local expandedSize = math.max( config.width, config.height ) * 1.5
 
-    local w = self.isExpanded and expandedSize or config.width
-    local h = self.isExpanded and expandedSize or config.height
+    local forceX = GetConVar( "gminimap_force_x" ):GetFloat()
+    local forceY = GetConVar( "gminimap_force_y" ):GetFloat()
+
+    local forceW = GetConVar( "gminimap_force_w" ):GetFloat()
+    local forceH = GetConVar( "gminimap_force_h" ):GetFloat()
+
+    if forceX < 0 then forceX = config.x end
+    if forceY < 0 then forceY = config.y end
+
+    if forceW < 0 then forceW = config.width end
+    if forceH < 0 then forceH = config.height end
+
+    local expandedSize = math.max( forceW, forceH ) * 1.5
+
+    local w = self.isExpanded and expandedSize or forceW
+    local h = self.isExpanded and expandedSize or forceH
 
     w = screenH * w
     h = screenH * h
 
-    local x = ( screenW * config.x ) - ( w * config.x )
-    local y = ( screenH * config.y ) - ( h * config.y )
+    local x = ( screenW * forceX ) - ( w * forceX )
+    local y = ( screenH * forceY ) - ( h * forceY )
 
     if config.showCustomHealth then
         self.bar = {

@@ -1,5 +1,5 @@
-
 util.AddNetworkString( "gminimap.world_heights" )
+util.AddNetworkString( "gminimap.force_cvar_changed" )
 
 local mapHeights = GMinimap.mapHeights or {}
 GMinimap.mapHeights = mapHeights
@@ -127,3 +127,15 @@ hook.Add( "ClientSignOnStateChanged", "GMinimap.SendDataToNewPlayers", function(
         end )
     end
 end )
+
+-- callback on FCVAR_REPLICATED cvars dont work clientside so we need them here
+
+local function NotifyForceCvarChanged()
+    net.Start( "gminimap.force_cvar_changed", false )
+    net.Broadcast()
+end
+
+cvars.AddChangeCallback( "gminimap_force_x", NotifyForceCvarChanged, "changed_force_x" )
+cvars.AddChangeCallback( "gminimap_force_y", NotifyForceCvarChanged, "changed_force_y" )
+cvars.AddChangeCallback( "gminimap_force_w", NotifyForceCvarChanged, "changed_force_w" )
+cvars.AddChangeCallback( "gminimap_force_h", NotifyForceCvarChanged, "changed_force_h" )
