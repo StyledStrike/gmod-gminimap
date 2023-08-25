@@ -154,7 +154,7 @@ function GMinimap:Think()
     if isPressed ~= self.isExpandKeyPressed then
         self.isExpandKeyPressed = isPressed
 
-        if isPressed and not vgui.GetKeyboardFocus() then
+        if isPressed and not vgui.GetKeyboardFocus() and not gui.IsGameUIVisible() then
             self.isExpanded = not self.isExpanded
             self:UpdateLayout()
         end
