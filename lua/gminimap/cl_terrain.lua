@@ -93,6 +93,8 @@ function Terrain:Capture( origin )
         }
     } )
 
+    render.SetLightingMode( 0 )
+
     cam.Start( {
         type = "3D",
         x = 0,
@@ -110,6 +112,7 @@ function Terrain:Capture( origin )
     } )
 
     origin.z = self.minZ
+
     render.DrawBox( origin, Angle(), Vector( -self.area, -self.area, -1 ), Vector( self.area, self.area, 1 ), self.voidColor, true )
 
     cam.End3D()
@@ -127,7 +130,6 @@ function Terrain:Capture( origin )
         ["$pp_colour_inv"] = Config.terrainColorInv
     } )
 
-    render.SetLightingMode( 0 )
     render.PopRenderTarget()
 
     hook.Remove( "PreDrawSkyBox", noDrawHookId )
