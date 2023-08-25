@@ -18,6 +18,22 @@ A customizable minimap for your game HUD.
 
 Limits how far players can see other players on the map. Set to 0 to disable player blips.
 
+#### `gminimap_force_x <number>`
+
+Force the X position of the minimap on all players (between 0 and 1). Set to -1 to disable this.
+
+#### `gminimap_force_y <number>`
+
+Force the Y position of the minimap on all players (between 0 and 1). Set to -1 to disable this.
+
+#### `gminimap_force_w <number>`
+
+Force the width of the minimap on all players (between 0 and 1). Set to -1 to disable this.
+
+#### `gminimap_force_h <number>`
+
+Force the height of the minimap on all players (between 0 and 1). Set to -1 to disable this.
+
 ### Client-side functions
 
 #### `Player:SetBlipIcon(icon?: string)`
