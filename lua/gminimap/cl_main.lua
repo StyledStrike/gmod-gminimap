@@ -129,6 +129,8 @@ function GMinimap:UpdateLayout()
 
     local baseRatio = GMinimap.GetWorldZoomRatio()
 
+    baseRatio = baseRatio + baseRatio * ( 1 - config.zoom )
+
     self.radar.terrain.color = config.terrainColor
     self.radar.ratio = Either( self.isExpanded, baseRatio, baseRatio * 0.8 )
     self.radar.pivotMultY = Either( self.isExpanded, nil, 0.7 )

@@ -5,6 +5,8 @@ GMinimap.Config = Config
 function Config:Reset()
     self.enable = true
     self.expandKey = KEY_N
+
+    self.zoom = 1
     self.blipBaseSize = 0.015
 
     -- x and y are fractions (between 0 and 1), and they
@@ -51,6 +53,8 @@ function Config:Load()
     SetBool( self, "enable", data.enable )
     SetNumber( self, "expandKey", data.expandKey, KEY_FIRST, BUTTON_CODE_LAST )
 
+    SetNumber( self, "zoom", data.zoom, 0.5, 1.5 )
+
     SetNumber( self, "x", data.x, 0, 1 )
     SetNumber( self, "y", data.y, 0, 1 )
     SetNumber( self, "width", data.width, 0, 1 )
@@ -78,6 +82,8 @@ function Config:Save()
     local data = util.TableToJSON( {
         enable = self.enable,
         expandKey = self.expandKey,
+
+        zoom = self.zoom,
 
         x = self.x,
         y = self.y,
@@ -227,6 +233,15 @@ function Config:OpenPanel()
     end
 
     ------ radar ------
+
+    local rowZoom = props:CreateRow( "#gminimap.radar", "#gminimap.zoom" )
+    rowZoom:Setup( "Float", { min = 0.5, max = 1.5 } )
+    rowZoom:SetValue( self.zoom )
+
+    rowZoom.DataChanged = function( _, val )
+        self.zoom = math.Round( val, 3 )
+        OnConfigChanged()
+    end
 
     local forceX = GetConVar( "gminimap_force_x" ):GetFloat()
     local forceY = GetConVar( "gminimap_force_y" ):GetFloat()
