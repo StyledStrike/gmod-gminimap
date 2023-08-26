@@ -117,14 +117,14 @@ timer.Create( "GMinimap.UpdatePlayerBlips", 0.2, 0, function()
     local maxDist = cvarMaxDist:GetInt()
     local hideOthers = GMinimap.hidePlayerBlips or maxDist <= 0
 
-    for id, b in pairs( playerBlips ) do
-        if hideOthers or not IsValid( b.parent ) then
+    if hideOthers then
+        for id, _ in pairs( playerBlips ) do
             playerBlips[id] = nil
             GMinimap:RemoveBlipById( id )
         end
-    end
 
-    if hideOthers then return end
+        return
+    end
 
     local origin = localPly:GetPos()
     local minDist = maxDist * 0.75

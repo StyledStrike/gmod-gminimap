@@ -150,12 +150,6 @@ function GMinimap:DrawBlips( radar )
 
     while i > 0 do
         b = self.blips[i]
-        i = i - 1
-
-        if IsValid( b.parent ) then
-            b.position = b.parent:GetPos()
-            b.angle = GetHeading( b.parent )
-        end
 
         -- convert the blip world position to pixels relative to the radar
         x, y, yaw = radar:WorldToLocal( b.position, b.angle )
@@ -189,5 +183,17 @@ function GMinimap:DrawBlips( radar )
             SetMaterial( matArrow )
             DrawTexturedRectRotated( x, y, angSize * b.scale, angSize * b.scale, -yaw, colorBlack )
         end
+
+        if b.parent then
+            if IsValid( b.parent ) then
+                b.position = b.parent:GetPos()
+                b.angle = GetHeading( b.parent )
+            else
+                GMinimap.LogF( "Blip #%d no longer has a valid parent, removing...", i )
+                table.remove( self.blips, i )
+            end
+        end
+
+        i = i - 1
     end
 end
