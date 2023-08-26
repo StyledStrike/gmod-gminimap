@@ -4,6 +4,9 @@ ratioOverrides["gm_ame"] = 10
 ratioOverrides["gm_aistruct"] = 10
 ratioOverrides["gm_amber_metro"] = 10
 ratioOverrides["gm_abandoned_ascot_mall"] = 15
+ratioOverrides["gm_cinema_v2"] = 10
+ratioOverrides["rp_oviscity_gmc5"] = 15
+ratioOverrides["rp_nycity_day"] = 60
 
 GMinimap.ratioOverrides = ratioOverrides
 
