@@ -4,6 +4,7 @@ GMinimap.Config = Config
 
 function Config:Reset()
     self.enable = true
+    self.toggleKey = KEY_NONE
     self.expandKey = KEY_N
 
     self.zoom = 1
@@ -51,8 +52,8 @@ function Config:Load()
     local SetNumber, SetBool, SetColor = GMinimap.SetNumber, GMinimap.SetBool, GMinimap.SetColor
 
     SetBool( self, "enable", data.enable )
+    SetNumber( self, "toggleKey", data.toggleKey, KEY_NONE, BUTTON_CODE_LAST )
     SetNumber( self, "expandKey", data.expandKey, KEY_FIRST, BUTTON_CODE_LAST )
-
     SetNumber( self, "zoom", data.zoom, 0.5, 1.5 )
 
     SetNumber( self, "x", data.x, 0, 1 )
@@ -81,6 +82,7 @@ end
 function Config:Save()
     local data = util.TableToJSON( {
         enable = self.enable,
+        toggleKey = self.toggleKey,
         expandKey = self.expandKey,
 
         zoom = self.zoom,
@@ -207,29 +209,49 @@ function Config:OpenPanel()
         end, "#gminimap.no" )
     end
 
-    local rowKeybind = props:CreateRow( "#gminimap.name", "#gminimap.expand_key" )
-    rowKeybind:Setup( "Generic" )
-    rowKeybind.Inner:GetChildren()[1]:Remove()
-    rowKeybind.Inner.IsEditing = function() return false end
+    -- key binders
 
     local ignoreKeys = {
         [MOUSE_LEFT] = true,
         [MOUSE_RIGHT] = true
     }
 
-    local binder = vgui.Create( "DBinder", rowKeybind.Inner )
-    binder:Dock( FILL )
-    binder:SetValue( self.expandKey )
-
-    binder.OnChange = function( _, num )
-        if ignoreKeys[num] then
-            binder:SetValue( self.expandKey )
-            Derma_Message( "Cannot use " .. input.GetKeyName( num ) .. "!", "Invalid button", "OK" )
+    local function OnBindChange( binder, keyNum, configKey )
+        if ignoreKeys[keyNum] then
+            binder:SetValue( self[configKey] )
+            Derma_Message( "Cannot use " .. input.GetKeyName( keyNum ) .. "!", "Invalid button", "OK" )
 
             return
         end
 
-        self.expandKey = num
+        self[configKey] = keyNum
+        OnConfigChanged()
+    end
+
+    local rowBindToggle = props:CreateRow( "#gminimap.name", "#gminimap.toggle_key" )
+    rowBindToggle:Setup( "Generic" )
+    rowBindToggle.Inner:GetChildren()[1]:Remove()
+    rowBindToggle.Inner.IsEditing = function() return false end
+
+    local binderToggle = vgui.Create( "DBinder", rowBindToggle.Inner )
+    binderToggle:Dock( FILL )
+    binderToggle:SetValue( self.toggleKey )
+
+    binderToggle.OnChange = function( _, num )
+        OnBindChange( binderToggle, num, "toggleKey" )
+    end
+
+    local rowBindExpand = props:CreateRow( "#gminimap.name", "#gminimap.expand_key" )
+    rowBindExpand:Setup( "Generic" )
+    rowBindExpand.Inner:GetChildren()[1]:Remove()
+    rowBindExpand.Inner.IsEditing = function() return false end
+
+    local binderExpand = vgui.Create( "DBinder", rowBindExpand.Inner )
+    binderExpand:Dock( FILL )
+    binderExpand:SetValue( self.expandKey )
+
+    binderExpand.OnChange = function( _, num )
+        OnBindChange( binderExpand, num, "expandKey" )
     end
 
     ------ radar ------

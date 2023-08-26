@@ -139,3 +139,15 @@ cvars.AddChangeCallback( "gminimap_force_x", NotifyForceCvarChanged, "changed_fo
 cvars.AddChangeCallback( "gminimap_force_y", NotifyForceCvarChanged, "changed_force_y" )
 cvars.AddChangeCallback( "gminimap_force_w", NotifyForceCvarChanged, "changed_force_w" )
 cvars.AddChangeCallback( "gminimap_force_h", NotifyForceCvarChanged, "changed_force_h" )
+
+-- Workaround for key hooks that only run serverside on single-player
+
+if game.SinglePlayer() then
+    util.AddNetworkString( "gminimap.key" )
+
+    hook.Add( "PlayerButtonDown", "GMinimap.ButtonDownWorkaround", function( ply, button )
+        net.Start( "gminimap.key", true )
+        net.WriteUInt( button, 8 )
+        net.Send( ply )
+    end )
+end

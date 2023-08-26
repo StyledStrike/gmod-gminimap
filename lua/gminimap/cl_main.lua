@@ -51,10 +51,6 @@ function GMinimap:Activate()
     self.radar = GMinimap.CreateRadar()
     self:UpdateLayout()
 
-    hook.Add( "Think", "GMinimap.Think", function()
-        self:Think()
-    end )
-
     hook.Add( "HUDPaint", "GMinimap.Draw", function()
         self:Draw()
     end )
@@ -68,7 +64,6 @@ function GMinimap:Activate()
 end
 
 function GMinimap:Deactivate()
-    hook.Remove( "Think", "GMinimap.Think" )
     hook.Remove( "HUDPaint", "GMinimap.Draw" )
     hook.Remove( "StartChat", "GMinimap.DetectOpenChat" )
     hook.Remove( "HUDShouldDraw", "GMinimap.HideHUDItems" )
@@ -150,21 +145,39 @@ function GMinimap:UpdateLayout()
     end
 end
 
-function GMinimap:Think()
-    local isPressed = input.IsKeyDown( self.Config.expandKey )
+function GMinimap:OnButtonPressed( button )
+    if button == self.Config.toggleKey then
+        self.enable = not self.enable
 
-    if isPressed ~= self.isExpandKeyPressed then
-        self.isExpandKeyPressed = isPressed
-
-        if isPressed and not vgui.GetKeyboardFocus() and not gui.IsGameUIVisible() then
-            self.isExpanded = not self.isExpanded
-            self:UpdateLayout()
+        if self.enable then
+            self:Activate()
+        else
+            self:Deactivate()
         end
+
+    elseif button == self.Config.expandKey then
+        self.isExpanded = not self.isExpanded
+        self:UpdateLayout()
     end
 end
 
-local IsValid = IsValid
 local LocalPlayer = LocalPlayer
+
+hook.Add( "PlayerButtonDown", "GMinimap.DetectHotkeys", function( ply, button )
+    if not IsFirstTimePredicted() then return end
+    if ply ~= LocalPlayer() then return end
+
+    GMinimap:OnButtonPressed( button )
+end )
+
+-- Workaround net events for key hooks that only run serverside on single-player
+if game.SinglePlayer() then
+    net.Receive( "gminimap.key", function()
+        GMinimap:OnButtonPressed( net.ReadUInt( 8 ) )
+    end )
+end
+
+local IsValid = IsValid
 
 local m_clamp = math.Clamp
 local SetDrawColor = surface.SetDrawColor
