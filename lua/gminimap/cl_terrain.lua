@@ -46,9 +46,10 @@ function Terrain:SetHeights( minZ, maxZ )
 end
 
 local Vector, Angle = Vector, Angle
+local topL, topR = Vector(), Vector()
+local bottomL, bottomR = Vector(), Vector()
 
-local quadTL, quadTR = Vector(), Vector()
-local quadBR, quadBL = Vector(), Vector()
+local function NoDrawFunc() return true end
 
 function Terrain:Capture( origin )
     if self.capturing then return end
@@ -58,21 +59,21 @@ function Terrain:Capture( origin )
 
     local noDrawHookId = "GMinimap.CaptureNoDraw_" .. self.rtId
 
-    hook.Add( "PreDrawOpaqueRenderables", noDrawHookId, function( isDrawingDepth, isDrawSkybox, isDraw3DSkybox )
-        if isDrawingDepth or isDrawSkybox or isDraw3DSkybox then return end
+    hook.Add( "PostDrawOpaqueRenderables", noDrawHookId, function( _, isDrawSkybox, isDraw3DSkybox )
+        if isDrawSkybox or isDraw3DSkybox then return end
 
-        quadTL:SetUnpacked( origin.x, origin.y, self.minZ )
-        quadTR:SetUnpacked( origin.x + self.area, origin.y, self.minZ )
-        quadBR:SetUnpacked( origin.x + self.area, origin.y + self.area, self.minZ )
-        quadBL:SetUnpacked( origin.x, origin.y + self.area, self.minZ )
+        topL:SetUnpacked( origin.x - self.area, origin.y - self.area, self.minZ )
+        topR:SetUnpacked( origin.x + self.area, origin.y - self.area, self.minZ )
+        bottomL:SetUnpacked( origin.x - self.area, origin.y + self.area, self.minZ )
+        bottomR:SetUnpacked( origin.x + self.area, origin.y + self.area, self.minZ )
 
         render.SetColorMaterial()
-        render.DrawQuad( quadTL, quadTR, quadBR, quadBL, self.voidColor )
+        render.DrawQuad( topL, bottomL, bottomR, topR, self.voidColor )
     end )
 
-    hook.Add( "PreDrawSkyBox", noDrawHookId, function()
-        return true
-    end )
+    hook.Add( "PreDrawSkyBox", noDrawHookId, NoDrawFunc )
+    hook.Add( "PrePlayerDraw", noDrawHookId, NoDrawFunc )
+    hook.Add( "PreDrawViewModel", noDrawHookId, NoDrawFunc )
 
     local haloFunc = hook.GetTable()["PostDrawEffects"]["RenderHalos"]
     if haloFunc then
@@ -125,8 +126,10 @@ function Terrain:Capture( origin )
 
     render.PopRenderTarget()
 
-    hook.Remove( "PreDrawOpaqueRenderables", noDrawHookId )
+    hook.Remove( "PostDrawOpaqueRenderables", noDrawHookId )
     hook.Remove( "PreDrawSkyBox", noDrawHookId )
+    hook.Remove( "PrePlayerDraw", noDrawHookId )
+    hook.Remove( "PreDrawViewModel", noDrawHookId )
 
     if haloFunc then
         hook.Add( "PostDrawEffects", "RenderHalos", haloFunc )
