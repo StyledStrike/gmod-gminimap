@@ -47,6 +47,9 @@ end
 
 local Vector, Angle = Vector, Angle
 
+local quadTL, quadTR = Vector(), Vector()
+local quadBR, quadBL = Vector(), Vector()
+
 function Terrain:Capture( origin )
     if self.capturing then return end
     self.capturing = true
@@ -58,15 +61,13 @@ function Terrain:Capture( origin )
     hook.Add( "PreDrawOpaqueRenderables", noDrawHookId, function( isDrawingDepth, isDrawSkybox, isDraw3DSkybox )
         if isDrawingDepth or isDrawSkybox or isDraw3DSkybox then return end
 
-        render.SetColorMaterial()
-        render.DrawQuadEasy(
-            Vector( origin.x, origin.y, self.minZ ),
-            Vector( 0, 0, 1 ),
-            self.area * 2, self.area * 2,
-            self.voidColor, 0
-        )
+        quadTL:SetUnpacked( origin.x, origin.y, self.minZ )
+        quadTR:SetUnpacked( origin.x + self.area, origin.y, self.minZ )
+        quadBR:SetUnpacked( origin.x + self.area, origin.y + self.area, self.minZ )
+        quadBL:SetUnpacked( origin.x, origin.y + self.area, self.minZ )
 
-        return false
+        render.SetColorMaterial()
+        render.DrawQuad( quadTL, quadTR, quadBR, quadBL, self.voidColor )
     end )
 
     hook.Add( "PreDrawSkyBox", noDrawHookId, function()

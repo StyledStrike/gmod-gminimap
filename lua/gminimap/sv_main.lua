@@ -102,9 +102,9 @@ hook.Add( "InitPostEntity", "GMinimap.CalculateWorldSize", function()
         minZ = camZ + 1000
     end
 
-    -- if these are switched, the skybox is likely
-    -- level with the map, and so we disregard all we did so far
-    if minZ > maxZ then
+    -- if the min/max are switched, or the min is higher than the center,
+    -- the skybox is likely level with the map, and so we disregard all we did so far
+    if minZ > maxZ or minZ > centerZ then
         minZ, maxZ = GetWorldHeights()
     end
 
