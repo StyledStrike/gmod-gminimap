@@ -16,6 +16,7 @@ do
     mapHeights["gm_aistruct"] = { min = 100, max = 3000 }
     mapHeights["gm_thebox_17"] = { min = -14000, max = 12000 }
     mapHeights["rp_oviscity_gmc5"] = { min = -2000, max = 4000 }
+    mapHeights["rp_rockford_v2b"] = { min = -2000, max = 3000 }
 end
 
 local minHeight, maxHeight = -5000, 5000
