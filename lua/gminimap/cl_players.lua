@@ -134,7 +134,7 @@ timer.Create( "GMinimap.UpdatePlayerBlips", 0.2, 0, function()
     for _, ply in ipairs( player.GetAll() ) do
         if ply == localPly then continue end
 
-        id = tostring( ply:UserID() )
+        id = "player_" .. ply:UserID()
         dist = origin:Distance( ply:GetPos() )
         alpha = 1
 
