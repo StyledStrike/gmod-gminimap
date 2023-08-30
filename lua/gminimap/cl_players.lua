@@ -114,7 +114,7 @@ timer.Create( "GMinimap.UpdatePlayerBlips", 0.2, 0, function()
     end
 
     -- create/update local blips from other players
-    local maxDist = cvarMaxDist:GetInt()
+    local maxDist = cvarMaxDist:GetFloat()
     local hideOthers = GMinimap.hidePlayerBlips or maxDist <= 0
 
     if hideOthers then

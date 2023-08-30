@@ -4,7 +4,7 @@ hook.Add( "OnEntityCreated", "GMinimap.TrackLambdaPlayers", function( ent )
 
     GMinimap:AddBlip( {
         id = "lambda_player_" .. ent:EntIndex(),
-        icon = "gminimap/blips/default.png",
+        icon = "gminimap/blips/npc_default.png",
         parent = ent,
         indicateAng = true,
         scale = 0.8

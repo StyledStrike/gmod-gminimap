@@ -18,6 +18,9 @@ end
 GMinimap.CreateSharedConvar( "player_blips_max_distance", "8000", 0, 50000,
     "Limits how far players can see other players on the map. Set to 0 to disable player blips." )
 
+GMinimap.CreateSharedConvar( "npc_blips_max_distance", "3000", 0, 50000,
+    "Limits how far players can see NPCs on the map. Set to 0 to disable NPC blips." )
+
 GMinimap.CreateSharedConvar( "force_x", "-1", -1, 1,
     "Force the X position of the minimap on all players. Set to -1 to disable this." )
 
@@ -38,6 +41,7 @@ if SERVER then
     AddCSLuaFile( "gminimap/cl_blips.lua" )
     AddCSLuaFile( "gminimap/cl_terrain.lua" )
     AddCSLuaFile( "gminimap/cl_radar.lua" )
+    AddCSLuaFile( "gminimap/cl_npcs.lua" )
     AddCSLuaFile( "gminimap/cl_players.lua" )
     AddCSLuaFile( "gminimap/cl_landmarks.lua" )
     AddCSLuaFile( "gminimap/cl_main.lua" )
@@ -52,6 +56,7 @@ if CLIENT then
     include( "gminimap/cl_config.lua" )
     include( "gminimap/cl_blips.lua" )
     include( "gminimap/cl_terrain.lua" )
+    include( "gminimap/cl_npcs.lua" )
     include( "gminimap/cl_radar.lua" )
     include( "gminimap/cl_players.lua" )
     include( "gminimap/cl_landmarks.lua" )

@@ -22,6 +22,10 @@ Functions and examples for using GMinimap with Lua are available [here](https://
 
 Limits how far players can see other players on the map. Set to 0 to disable player blips.
 
+#### `gminimap_npc_blips_max_distance <number>`
+
+Limits how far players can see NPCs on the map. Set to 0 to disable NPC blips.
+
 #### `gminimap_force_x <number>`
 
 Force the X position of the minimap on all players (between 0 and 1). Set to -1 to disable this.
