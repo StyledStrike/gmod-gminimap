@@ -38,6 +38,10 @@ function GMinimap:SetCanSeePlayerBlips( canSee )
     self.hidePlayerBlips = not canSee
 end
 
+function GMinimap:SetOnlySameTeamBlips( sameTeamOnly )
+    self.sameTeamOnly = sameTeamOnly
+end
+
 local icons = {
     dead = "gminimap/dead.png",
     vehicle = "gminimap/blips/car.png"
@@ -126,6 +130,9 @@ timer.Create( "GMinimap.UpdatePlayerBlips", 0.2, 0, function()
         return
     end
 
+    local sameTeamOnly = GMinimap.sameTeamOnly
+    local myTeam = localPly:Team()
+
     local origin = localPly:GetPos()
     local minDist = maxDist * 0.75
 
@@ -137,6 +144,15 @@ timer.Create( "GMinimap.UpdatePlayerBlips", 0.2, 0, function()
         id = "player_" .. ply:UserID()
         dist = origin:Distance( ply:GetPos() )
         alpha = 1
+
+        if sameTeamOnly and myTeam ~= ply:Team() then
+            if playerBlips[id] then
+                playerBlips[id] = nil
+                GMinimap:RemoveBlipById( id )
+            end
+
+            continue
+        end
 
         if dist > minDist then
             alpha = ( maxDist - dist ) / ( maxDist - minDist )
