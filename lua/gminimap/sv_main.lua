@@ -17,6 +17,8 @@ do
     mapHeights["gm_thebox_17"] = { min = -14000, max = 12000 }
     mapHeights["rp_oviscity_gmc5"] = { min = -2000, max = 4000 }
     mapHeights["rp_rockford_v2b"] = { min = -2000, max = 3000 }
+    mapHeights["gm_aknevo"] = { min = -300, max = 11000 }
+    mapHeights["gm_copper9"] = { min = -80, max = 3800 }
 end
 
 local minHeight, maxHeight = -5000, 5000
@@ -61,7 +63,7 @@ hook.Add( "InitPostEntity", "GMinimap.CalculateWorldSize", function()
     local map = game.GetMap()
     local heights = mapHeights[map]
 
-    -- prefer the hardcoded heights over what about to be done below
+    -- prefer the hardcoded heights over whats about to be done below
     if heights then
         minHeight, maxHeight = heights.min, heights.max
 
@@ -131,7 +133,7 @@ hook.Add( "ClientSignOnStateChanged", "GMinimap.SendDataToNewPlayers", function(
     end
 end )
 
--- callback on FCVAR_REPLICATED cvars dont work clientside so we need them here
+-- callbacks on FCVAR_REPLICATED cvars dont work clientside so we need them here
 
 local function NotifyForceCvarChanged()
     net.Start( "gminimap.force_cvar_changed", false )
