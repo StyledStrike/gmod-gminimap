@@ -219,7 +219,7 @@ function GMinimap:OpenLandmarks()
     ---------- landmark editor panel ----------
 
     local function CreateMenuPanel( class, w, h )
-        local pnl = vgui.Create( class, self )
+        local pnl = vgui.Create( class )
         pnl:SetSize( w, h )
 
         local m = DermaMenu()
