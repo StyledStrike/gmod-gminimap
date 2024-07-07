@@ -6,7 +6,7 @@ A customizable minimap for your game HUD.
 
 - Customizable position, size, health/armor, colors and other goodies
 - Bookmark your favorite locations with custom blips
-- Shows other players nearby
+- Shows other nearby players
 - Map of the terrain, with minimum impact to performance
 - Supports custom blips and custom icons (including direct links to images on the internet)
 
