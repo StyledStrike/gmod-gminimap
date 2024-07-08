@@ -192,6 +192,8 @@ concommand.Add(
 net.Receive( "gminimap.world_heights", function()
     World.serverBottom = net.ReadFloat()
     World.serverTop = net.ReadFloat()
+    World.activeLayerIndex = 0
+    World:SetActiveLayer( 0 )
 
     GMinimap.Print( "Received world heights from server: %f, %f", World.serverBottom, World.serverTop )
 end )
