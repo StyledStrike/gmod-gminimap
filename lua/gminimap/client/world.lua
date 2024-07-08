@@ -196,7 +196,7 @@ function World:OpenLayers()
     -- Item panel creation
     local function AddItem( layer, label, index )
         local item = vgui.Create( "DPanel", layerList )
-        item:SetTall( 120 )
+        item:SetTall( 100 )
         item:Dock( TOP )
         item:DockMargin( 0, 4, 0, 0 )
         item:DockPadding( 2, 2, 2, 2 )
@@ -209,7 +209,9 @@ function World:OpenLayers()
         item.Paint = PaintItem
         item.OnMousePressed = SelectItem
 
-        CreatePropertyLabel( L( "layer_boundaries" ):format( label ), item ):DockMargin( 2, -4, 0, -4 )
+        local title = CreatePropertyLabel( L( "layer_boundaries" ):format( label ), item )
+        title:SetContentAlignment( 5 )
+        title:DockMargin( 0, -4, 0, -4 )
 
         local sliderTop = CreateSlider( item, L"layer_top", layer.top, -20000, 20000, 0, function( value )
             layer.top = value
