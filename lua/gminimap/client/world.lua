@@ -56,7 +56,16 @@ function World:LoadFromFile()
     SetNumber( self, "top", data.top, -50000, 50000, nil )
     SetNumber( self, "baseZoomRatio", data.baseZoomRatio, 1, 100, self.baseZoomRatio )
 
-    -- TODO: load layers
+    if type( data.layers ) == "table" and table.IsSequential( data.layers ) then
+        for i, l in ipairs( data.layers ) do
+            local layer = {}
+
+            SetNumber( layer, "bottom", l.bottom, -50000, 50000, nil )
+            SetNumber( layer, "top", l.top, -50000, 50000, nil )
+
+            self.layers[i] = layer
+        end
+    end
 
     GMinimap.Print( "Loaded map settings file: %s", path )
 end
@@ -78,8 +87,298 @@ hook.Add( "InitPostEntity", "GMinimap.SetupWorld", function()
     World:LoadFromFile()
 end )
 
-function World:SetupPanel( parent )
+concommand.Add(
+    "gminimap_layers",
+    function() World:OpenLayers() end,
+    nil,
+    "Opens the GMinimap layers editor."
+)
+
+function World:OpenLayers()
+    local L = GMinimap.GetLanguageText
     local ApplyTheme = GMinimap.Theme.Apply
 
-    -- TODO: check admin
+    local CreateSlider = GMinimap.CreateSlider
+    local CreatePropertyLabel = GMinimap.CreatePropertyLabel
+
+    local frame = vgui.Create( "DFrame" )
+    frame:SetTitle( L"layers" )
+    frame:SetIcon( "icon16/shape_move_forwards.png" )
+    frame:SetSize( 700, 500 )
+    frame:SetSizable( true )
+    frame:SetDraggable( true )
+    frame:SetDeleteOnClose( true )
+    frame:SetMinWidth( 800 )
+    frame:SetMinHeight( 600 )
+    frame:DockPadding( 4, 28, 4, 4 )
+    frame:Center()
+    frame:MakePopup()
+
+    ApplyTheme( frame )
+
+    local menuBar = vgui.Create( "DMenuBar", frame )
+    menuBar:DockMargin( -3, -6, -3, 0 )
+
+    local container = vgui.Create( "DPanel", frame )
+    container:SetPaintBackground( false )
+    container:Dock( FILL )
+
+    local radar = vgui.Create( "GMinimap_Radar", container )
+    radar:SetRatio( GMinimap.World.baseZoomRatio )
+    radar:AddZoomSlider()
+    radar:Dock( FILL )
+
+    local rightPanel = vgui.Create( "DPanel", frame )
+    rightPanel:SetWide( 200 )
+    rightPanel:SetPaintBackground( false )
+    rightPanel:Dock( RIGHT )
+    rightPanel:DockMargin( 4, 0, 0, 0 )
+
+    local layerList = vgui.Create( "DScrollPanel", rightPanel )
+    layerList:Dock( FILL )
+    layerList.pnlCanvas:DockPadding( 0, 0, 4, 0 )
+
+    ApplyTheme( layerList )
+
+    local selectedItem
+
+    local function GetItems()
+        return layerList.pnlCanvas:GetChildren()
+    end
+
+    local function SelectItem( item )
+        selectedItem = nil
+
+        for _, v in ipairs( GetItems() ) do
+            if v == item then
+                selectedItem = v
+                v._isSelected = true
+            else
+                v._isSelected = false
+            end
+        end
+
+        if not selectedItem then return end
+
+        timer.Simple( 0.1, function()
+            layerList:ScrollToChild( selectedItem )
+        end )
+
+        radar:SetHeights( selectedItem._layer.bottom, selectedItem._layer.top )
+    end
+
+    local function OnItemChanged( item )
+        local layer = item._layer
+
+        if layer.isDefault then
+            self.top = layer.top
+            self.bottom = layer.bottom
+            hook.Run( "OnGMinimapConfigChange" )
+        end
+
+        SelectItem( item )
+    end
+
+    -- Item panel functions
+    local colors = GMinimap.Theme.colors
+
+    local function PaintItem( s, w, h )
+        local bgColor = s._isSelected and colors.buttonPress or colors.frameBorder
+
+        surface.SetDrawColor( bgColor:Unpack() )
+        surface.DrawRect( 0, 0, w, h )
+    end
+
+    local function SliderPerformLayout( s )
+        s.Label:SetWide( 45 )
+    end
+
+    -- Item panel creation
+    local function AddItem( layer, label, index )
+        local item = vgui.Create( "DPanel", layerList )
+        item:SetTall( 120 )
+        item:Dock( TOP )
+        item:DockMargin( 0, 4, 0, 0 )
+        item:DockPadding( 2, 2, 2, 2 )
+
+        layer.top = layer.top or 5000
+        layer.bottom = layer.bottom or -5000
+
+        item._index = index
+        item._layer = layer
+        item.Paint = PaintItem
+        item.OnMousePressed = SelectItem
+
+        CreatePropertyLabel( L( "layer_boundaries" ):format( label ), item ):DockMargin( 2, -4, 0, -4 )
+
+        local sliderTop = CreateSlider( item, L"layer_top", layer.top, -20000, 20000, 0, function( value )
+            layer.top = value
+            OnItemChanged( item )
+        end )
+
+        item._sliderTop = sliderTop
+        sliderTop.PerformLayout = SliderPerformLayout
+
+        local sliderBottom = CreateSlider( item, L"layer_bottom", layer.bottom, -20000, 20000, 0, function( value )
+            layer.bottom = value
+            OnItemChanged( item )
+        end )
+
+        item._sliderBottom = sliderBottom
+        sliderBottom.PerformLayout = SliderPerformLayout
+
+        return item
+    end
+
+    -- Update the list of items
+    local function UpdateList()
+        layerList:Clear()
+
+        local bottom, top = World:GetHeights()
+
+        local defaultItem = AddItem( {
+            isDefault = true,
+            bottom = bottom,
+            top = top
+        }, L"layer_default" )
+
+        SelectItem( defaultItem )
+
+        for i, layer in ipairs( self.layers ) do
+            AddItem( layer, L( "layer_number" ):format( i ), i )
+        end
+    end
+
+    UpdateList()
+
+    -- Menu functions
+    local fileMenu = menuBar:AddMenu( L"file" )
+
+    fileMenu:AddOption( L"import", function()
+        local path = "data_static/gminimap/" .. game.GetMap() .. ".json"
+
+        if not file.Exists( path, "GAME" ) then
+            Derma_Message( L( "map_settings_not_found" ):format( path ), L"import", L"ok" )
+            return
+        end
+
+        World:LoadFromFile()
+        UpdateList()
+        hook.Run( "OnGMinimapConfigChange" )
+
+        Derma_Message( L( "map_settings_found" ):format( path ), L"import", L"ok" )
+    end ):SetIcon( "icon16/page_white_get.png" )
+
+    fileMenu:AddOption( L"export", function()
+        local bottom, top = World:GetHeights()
+
+        local data = util.TableToJSON( {
+            top = top,
+            bottom = bottom,
+            layers = self.layers
+        }, true )
+
+        local frameExport = vgui.Create( "DFrame" )
+        frameExport:SetTitle( L"export" )
+        frameExport:SetIcon( "icon16/page_white_go.png" )
+        frameExport:SetSize( 500, 380 )
+        frameExport:SetSizable( false )
+        frameExport:SetDraggable( true )
+        frameExport:SetDeleteOnClose( true )
+        frameExport:DockPadding( 4, 38, 4, 4 )
+        frameExport:Center()
+        frameExport:MakePopup()
+
+        ApplyTheme( frameExport )
+
+        local helpLabel1 = vgui.Create( "DLabel", frameExport )
+        helpLabel1:SetTall( 16 )
+        helpLabel1:SetText( L"export_tip1" )
+        helpLabel1:SetFont( "ChatFont" )
+        helpLabel1:SetColor( color_white )
+        helpLabel1:SetContentAlignment( 5 )
+        helpLabel1:Dock( TOP )
+
+        local path = string.format( "%s/data_static/gminimap/%s.json", L"export_tip2", game.GetMap() )
+
+        local pathEntry = vgui.Create( "DTextEntry", frameExport )
+        pathEntry:SetEditable( false )
+        pathEntry:SetValue( path )
+        pathEntry:Dock( TOP )
+        pathEntry:DockMargin( 30, 10, 30, 10 )
+
+        ApplyTheme( pathEntry )
+
+        local helpLabel2 = vgui.Create( "DLabel", frameExport )
+        helpLabel2:SetTall( 16 )
+        helpLabel2:SetText( L"export_tip3" )
+        helpLabel2:SetFont( "ChatFont" )
+        helpLabel2:SetColor( color_white )
+        helpLabel2:SetContentAlignment( 5 )
+        helpLabel2:Dock( TOP )
+
+        local codeEntry = vgui.Create( "DTextEntry", frameExport )
+        pathEntry:SetEditable( false )
+        codeEntry:SetMultiline( true )
+        codeEntry:SetValue( data )
+        codeEntry:SetTall( 200 )
+        codeEntry:Dock( TOP )
+        codeEntry:DockMargin( 30, 10, 30, 10 )
+
+        ApplyTheme( codeEntry )
+
+        local buttonCopy = vgui.Create( "DButton", frameExport )
+        buttonCopy:SetTall( 20 )
+        buttonCopy:SetText( L"copy_code" )
+        buttonCopy:Dock( FILL )
+
+        ApplyTheme( buttonCopy )
+
+        buttonCopy.DoClick = function()
+            SetClipboardText( data )
+            buttonCopy:SetText( L"code_copied" )
+        end
+    end ):SetIcon( "icon16/page_white_go.png" )
+
+    local layersMenu = menuBar:AddMenu( L"layers" )
+
+    layersMenu:AddOption( L"add_layer", function()
+        local index = #self.layers + 1
+
+        self.layers[index] = {}
+        UpdateList()
+
+        local items = GetItems()
+        SelectItem( items[#items] )
+    end ):SetIcon( "icon16/shape_square_add.png" )
+
+    layersMenu:AddOption( L"remove_layer", function()
+        if not selectedItem then return end
+
+        if selectedItem._layer.isDefault then
+            Derma_Message( L"remove_layer_blocked", L"remove_layer", L"ok" )
+            return
+        end
+
+        table.remove( self.layers, selectedItem._index )
+        selectedItem:Remove()
+        UpdateList()
+    end ):SetIcon( "icon16/shape_square_delete.png" )
+
+    layersMenu:AddOption( L"layer_user_position", function()
+        if not selectedItem then return end
+
+        local top, bottom = GMinimap.GetHeightsAround( LocalPlayer():EyePos(), 50000 )
+
+        top = top + 1000
+        bottom = bottom - 1000
+
+        selectedItem._layer.top = top
+        selectedItem._layer.bottom = bottom
+
+        selectedItem._sliderTop:SetValue( top )
+        selectedItem._sliderBottom:SetValue( bottom )
+
+        SelectItem( selectedItem )
+    end ):SetIcon( "icon16/shape_square_go.png" )
 end

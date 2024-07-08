@@ -3,34 +3,10 @@ util.AddNetworkString( "gminimap.force_cvar_changed" )
 
 local worldTop, worldBottom
 
-local function TraceLineWorld( pos, dir, dist )
-    return util.TraceLine( {
-        start = pos,
-        endpos = pos + dir * dist,
-        filter = ents.GetAll(),
-        mask = MASK_SOLID_BRUSHONLY,
-        collisiongroup = COLLISION_GROUP_WORLD,
-        ignoreworld = false
-    } )
-end
-
-local UP = Vector( 0, 0, 1 )
-local DOWN = Vector( 0, 0, -1 )
-
-local function GetHeightsAround( pos, dist )
-    -- Try to find the ceiling
-    local tr = TraceLineWorld( pos, UP, dist )
-    local top = tr.Hit and tr.HitPos[3] or pos[3] + dist
-
-    -- Try to find the floor
-    tr = TraceLineWorld( pos, DOWN, dist )
-    local bottom = tr.Hit and tr.HitPos[3] or pos[3] - dist
-
-    return top, bottom
-end
-
 hook.Add( "InitPostEntity", "GMinimap.CalculateWorldSize", function()
     worldTop, worldBottom = 0, 0
+
+    local GetHeightsAround = GMinimap.GetHeightsAround
 
     -- Try to find the world heights by looking at spawnpoints
     local spawnpoints = ents.FindByClass( "info_player_start" )

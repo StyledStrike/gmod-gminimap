@@ -27,6 +27,32 @@ function GMinimap.Print( str, ... )
     MsgC( Color( 42, 180, 0 ), "[GMinimap] ", color_white, string.format( str, ... ), "\n" )
 end
 
+local UP = Vector( 0, 0, 1 )
+local DOWN = Vector( 0, 0, -1 )
+
+function GMinimap.TraceLineWorld( pos, dir, dist )
+    return util.TraceLine( {
+        start = pos,
+        endpos = pos + dir * dist,
+        filter = ents.GetAll(),
+        mask = MASK_SOLID_BRUSHONLY,
+        collisiongroup = COLLISION_GROUP_WORLD,
+        ignoreworld = false
+    } )
+end
+
+function GMinimap.GetHeightsAround( pos, dist )
+    -- Try to find the ceiling
+    local tr = GMinimap.TraceLineWorld( pos, UP, dist )
+    local top = tr.Hit and tr.HitPos[3] or pos[3] + dist
+
+    -- Try to find the floor
+    tr = GMinimap.TraceLineWorld( pos, DOWN, dist )
+    local bottom = tr.Hit and tr.HitPos[3] or pos[3] - dist
+
+    return top, bottom
+end
+
 if SERVER then
     include( "gminimap/server/main.lua" )
 

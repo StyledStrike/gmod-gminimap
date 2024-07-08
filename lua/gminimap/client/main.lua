@@ -66,11 +66,9 @@ function GMinimap:OpenFrame( tabIndex )
 
     local landmarksPanel = frame:AddTab( "icon16/map.png", "landmarks" )
     local settingsPanel = frame:AddTab( "icon16/cog.png", "configure_minimap" )
-    local layersPanel = frame:AddTab( "icon16/shape_move_forwards.png", "layers" )
 
     self.Landmarks:SetupPanel( landmarksPanel )
     self.Config:SetupPanel( settingsPanel )
-    self.World:SetupPanel( layersPanel )
 
     if tabIndex then
         frame:SetActiveTabByIndex( tabIndex )
@@ -181,6 +179,7 @@ function GMinimap:UpdateLayout()
     local margin = self.Config.borderThickness
     local marginBottom = config.showCustomHealth and ( 1 + config.healthHeight + margin * 2 ) or margin * 2
 
+    self.radar:SetHeights( self.World:GetHeights() )
     self.radar:SetDimensions( x + margin, y + margin, w - margin * 2, h - marginBottom )
     self.panel:SetPos( x, y )
     self.panel:SetSize( w, h )
