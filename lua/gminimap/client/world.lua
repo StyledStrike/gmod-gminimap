@@ -271,7 +271,9 @@ function World:OpenLayers()
         if not selectedItem then return end
 
         timer.Simple( 0.1, function()
-            layerList:ScrollToChild( selectedItem )
+            if IsValid( layerList ) then
+                layerList:ScrollToChild( selectedItem )
+            end
         end )
 
         radar:SetHeights( selectedItem._layer.bottom, selectedItem._layer.top )
