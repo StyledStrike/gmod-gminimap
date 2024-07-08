@@ -213,7 +213,7 @@ function Radar:Capture( origin )
     PushFilterMin( 1 )
     PushFilterMag( 1 )
 
-    local offset = 1000
+    local offset = 50000
 
     render.RenderView( {
         origin = origin + Vector( 0, 0, offset ),
