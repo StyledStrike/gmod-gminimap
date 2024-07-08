@@ -213,15 +213,17 @@ function Radar:Capture( origin )
     PushFilterMin( 1 )
     PushFilterMag( 1 )
 
+    local offset = 1000
+
     render.RenderView( {
-        origin = origin,
+        origin = origin + Vector( 0, 0, offset ),
         angles = Angle( 90, 0, 0 ),
         x = 0,
         y = 0,
         w = 1024,
         h = 1024,
-        znear = 100,
-        zfar = self.top - self.bottom,
+        znear = offset,
+        zfar = self.top - self.bottom + offset,
         drawhud = false,
         drawmonitors = false,
         drawviewmodel = false,
