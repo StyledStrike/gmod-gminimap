@@ -438,7 +438,9 @@ function Landmarks:SetupPanel( parent )
         end
 
         timer.Simple( editing == nil and 0.5 or 0, function()
-            landmarkList:ScrollToChild( line )
+            if IsValid( landmarkList ) then
+                landmarkList:ScrollToChild( line )
+            end
         end )
 
         landmarkEditor:SizeTo( -1, 200, 0.2, 0, 0.3 )
