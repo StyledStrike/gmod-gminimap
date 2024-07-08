@@ -127,6 +127,12 @@ function World:GetHeights()
         self.layerTop or self.top or self.serverTop or 5000
 end
 
+function World:GetHeightsNoLayer()
+    return
+        self.bottom or self.serverBottom or -5000,
+        self.top or self.serverTop or 5000
+end
+
 local function IsWithinTrigger( v, t )
     if v[1] < t.ax or v[1] > t.bx then return false end
     if v[2] < t.ay or v[2] > t.by then return false end
@@ -216,6 +222,10 @@ function World:OpenLayers()
 
     ApplyTheme( frame )
 
+    frame.OnClose = function()
+        self.activeLayerIndex = 0
+    end
+
     local menuBar = vgui.Create( "DMenuBar", frame )
     menuBar:DockMargin( -3, -6, -3, 0 )
 
@@ -265,6 +275,7 @@ function World:OpenLayers()
         end )
 
         radar:SetHeights( selectedItem._layer.bottom, selectedItem._layer.top )
+        self:SetActiveLayer( selectedItem._index )
     end
 
     local function OnItemChanged( item )
@@ -273,7 +284,6 @@ function World:OpenLayers()
         if layer.isDefault then
             self.top = layer.top
             self.bottom = layer.bottom
-            hook.Run( "OnGMinimapConfigChange" )
         end
 
         SelectItem( item )
@@ -336,13 +346,13 @@ function World:OpenLayers()
     local function UpdateList()
         layerList:Clear()
 
-        local bottom, top = World:GetHeights()
+        local bottom, top = World:GetHeightsNoLayer()
 
         local defaultItem = AddItem( {
             isDefault = true,
             bottom = bottom,
             top = top
-        }, L"layer_default" )
+        }, L"layer_default", 0 )
 
         SelectItem( defaultItem )
 
@@ -372,7 +382,7 @@ function World:OpenLayers()
     end ):SetIcon( "icon16/page_white_get.png" )
 
     fileMenu:AddOption( L"export", function()
-        local bottom, top = World:GetHeights()
+        local bottom, top = World:GetHeightsNoLayer()
 
         local data = util.TableToJSON( {
             top = top,
