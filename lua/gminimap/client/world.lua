@@ -397,6 +397,10 @@ function World:OpenLayers()
             data.layers = self.layers
         end
 
+        if #self.triggers > 0 then
+            data.triggers = self.triggers
+        end
+
         data = util.TableToJSON( data, true )
 
         local frameExport = vgui.Create( "DFrame" )
