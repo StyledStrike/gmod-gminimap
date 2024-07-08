@@ -183,6 +183,9 @@ end
 
 local function NoDrawFunc() return true end
 
+local OriginalEyePos = GMinimap.OriginalEyePos or EyePos
+GMinimap.OriginalEyePos = OriginalEyePos
+
 function Radar:Capture( origin )
     if self.capturing then return end
 
@@ -195,6 +198,12 @@ function Radar:Capture( origin )
     hook.Add( "PreDrawSkyBox", hookId, NoDrawFunc )
     hook.Add( "PrePlayerDraw", hookId, NoDrawFunc )
     hook.Add( "PreDrawViewModel", hookId, NoDrawFunc )
+
+    local lastEyePos = EyePos()
+
+    EyePos = function()
+        return lastEyePos
+    end
 
     local haloFunc = hook.GetTable()["PostDrawEffects"]["RenderHalos"]
 
@@ -263,6 +272,8 @@ function Radar:Capture( origin )
     if haloFunc then
         hook.Add( "PostDrawEffects", "RenderHalos", haloFunc )
     end
+
+    EyePos = OriginalEyePos
 
     self.capturing = false
 end
