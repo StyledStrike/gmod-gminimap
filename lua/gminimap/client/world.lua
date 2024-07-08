@@ -388,11 +388,16 @@ function World:OpenLayers()
     fileMenu:AddOption( L"export", function()
         local bottom, top = World:GetHeightsNoLayer()
 
-        local data = util.TableToJSON( {
+        local data = {
             top = top,
-            bottom = bottom,
-            layers = self.layers
-        }, true )
+            bottom = bottom
+        }
+
+        if #self.layers > 0 then
+            data.layers = self.layers
+        end
+
+        data = util.TableToJSON( data, true )
 
         local frameExport = vgui.Create( "DFrame" )
         frameExport:SetTitle( L"export" )
