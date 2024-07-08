@@ -1,3 +1,24 @@
 {
-    "baseZoomRatio": 15
+    "baseZoomRatio": 15,
+    "top": 2000.0,
+	"bottom": -10.0,
+	"layers": [
+		{
+			"bottom": -2000.0,
+			"top": -5.0
+		}
+	],
+    "triggers": [
+		{
+			"layerIndex": 1,
+
+			"ax": -3944,
+			"ay": -3324,
+			"az": -448,
+
+			"bx": 4132,
+			"by": 7768,
+			"bz": -8
+		}
+    ]
 }
