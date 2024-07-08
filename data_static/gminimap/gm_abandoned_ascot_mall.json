@@ -1,6 +1,6 @@
 {
-    "baseZoomRatio": 15,
-    "top": 2000.0,
+	"baseZoomRatio": 15,
+	"top": 2000.0,
 	"bottom": -10.0,
 	"layers": [
 		{
@@ -8,7 +8,7 @@
 			"top": -5.0
 		}
 	],
-    "triggers": [
+	"triggers": [
 		{
 			"layerIndex": 1,
 
@@ -20,5 +20,5 @@
 			"by": 7768,
 			"bz": -8
 		}
-    ]
+	]
 }

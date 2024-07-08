@@ -1,13 +1,13 @@
 {
-    "bottom": -800,
-    "top": 8000,
-    "layers": [
-        {
-            "bottom": -5000.0,
-            "top": -8.0
-        }
-    ],
-    "triggers": [
+	"bottom": -800,
+	"top": 8000,
+	"layers": [
+		{
+			"bottom": -5000.0,
+			"top": -8.0
+		}
+	],
+	"triggers": [
 		{
 			"layerIndex": 1,
 
@@ -19,5 +19,5 @@
 			"by": 14332,
 			"bz": -8
 		}
-    ]
+	]
 }
