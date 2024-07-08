@@ -107,11 +107,16 @@ function GMinimap:Activate()
             self:UpdateLayout()
         end
     end )
+
+    hook.Add( "Think", "GMinimap.AutoSwitchLayers", function()
+        self.World:CheckTriggers()
+    end )
 end
 
 function GMinimap:Deactivate()
     hook.Remove( "StartChat", "GMinimap.DetectOpenChat" )
     hook.Remove( "HUDShouldDraw", "GMinimap.HideHUDItems" )
+    hook.Remove( "Think", "GMinimap.AutoSwitchLayers" )
 
     if IsValid( self.panel ) then
         self.panel:Remove()

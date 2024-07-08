@@ -7,12 +7,23 @@ local World = GMinimap.World or {}
 GMinimap.World = World
 
 function World:Reset()
+    self.baseZoomRatio = 50
+
     -- World heights, set when the data file exists.
     self.bottom = nil
     self.top = nil
 
-    self.baseZoomRatio = 50
+    -- List of vertical slices of the map
     self.layers = {}
+
+    -- Places on the world that activate layers
+    self.triggers = {}
+
+    -- Trigger check variables
+    self.triggerCount = 0
+    self.lastTriggerIndex = 0
+    self.triggerLayerIndex = 0
+    self.activeLayerIndex = 0
 
     local world = game.GetWorld()
     if not world then return end
@@ -65,6 +76,46 @@ function World:LoadFromFile()
 
             self.layers[i] = layer
         end
+    else
+        GMinimap.Print( "Map settings has no layers." )
+    end
+
+    local function SortVectors( ax, ay, az, bx, by, bz )
+        return
+            math.min( ax, bx ),
+            math.min( ay, by ),
+            math.min( az, bz ),
+
+            math.max( ax, bx ),
+            math.max( ay, by ),
+            math.max( az, bz )
+    end
+
+    if type( data.triggers ) == "table" and table.IsSequential( data.triggers ) then
+        for i, trigger in ipairs( data.triggers ) do
+            local t = {}
+
+            SetNumber( t, "layerIndex", trigger.layerIndex, 0, 1000, 1 )
+
+            SetNumber( t, "ax", trigger.ax, -50000, 50000, 0 )
+            SetNumber( t, "ay", trigger.ay, -50000, 50000, 0 )
+            SetNumber( t, "az", trigger.az, -50000, 50000, 0 )
+
+            SetNumber( t, "bx", trigger.bx, -50000, 50000, 0 )
+            SetNumber( t, "by", trigger.by, -50000, 50000, 0 )
+            SetNumber( t, "bz", trigger.bz, -50000, 50000, 0 )
+
+            t.ax, t.ay, t.az, t.bx, t.by, t.bz = SortVectors(
+                t.ax, t.ay, t.az,
+                t.bx, t.by, t.bz
+            )
+
+            self.triggers[i] = t
+        end
+
+        self.triggerCount = #self.triggers
+    else
+        GMinimap.Print( "Map settings has no layer triggers." )
     end
 
     GMinimap.Print( "Loaded map settings file: %s", path )
@@ -72,9 +123,65 @@ end
 
 function World:GetHeights()
     return
-        self.bottom or self.serverBottom or -5000,
-        self.top or self.serverTop or 5000
+        self.layerBottom or self.bottom or self.serverBottom or -5000,
+        self.layerTop or self.top or self.serverTop or 5000
 end
+
+local function IsWithinTrigger( v, t )
+    if v[1] < t.ax or v[1] > t.bx then return false end
+    if v[2] < t.ay or v[2] > t.by then return false end
+    if v[3] < t.az or v[3] > t.bz then return false end
+
+    return true
+end
+
+function World:SetActiveLayer( index )
+    local layer = self.layers[index]
+
+    if layer then
+        self.layerTop = layer.top
+        self.layerBottom = layer.bottom
+    else
+        self.layerTop = nil
+        self.layerBottom = nil
+    end
+
+    GMinimap:UpdateLayout()
+end
+
+function World:CheckTriggers()
+    if self.triggerCount == 0 then return end
+
+    local index = self.lastTriggerIndex + 1
+
+    -- We've iterated over all triggers, time to check
+    if index > self.triggerCount then
+        index = 1
+
+        if self.triggerLayerIndex ~= self.activeLayerIndex then
+            self.activeLayerIndex = self.triggerLayerIndex
+            self:SetActiveLayer( self.activeLayerIndex )
+        end
+
+        self.triggerLayerIndex = 0
+    end
+
+    self.lastTriggerIndex = index
+
+    -- Do one trigger check per frame
+    local checkPos = LocalPlayer():EyePos()
+
+    if IsWithinTrigger( checkPos, self.triggers[index] ) then
+        self.triggerLayerIndex = self.triggers[index].layerIndex
+    end
+end
+
+concommand.Add(
+    "gminimap_layers",
+    function() World:OpenLayers() end,
+    nil,
+    "Opens the GMinimap layers editor."
+)
 
 net.Receive( "gminimap.world_heights", function()
     World.serverBottom = net.ReadFloat()
@@ -86,13 +193,6 @@ end )
 hook.Add( "InitPostEntity", "GMinimap.SetupWorld", function()
     World:LoadFromFile()
 end )
-
-concommand.Add(
-    "gminimap_layers",
-    function() World:OpenLayers() end,
-    nil,
-    "Opens the GMinimap layers editor."
-)
 
 function World:OpenLayers()
     local L = GMinimap.GetLanguageText
