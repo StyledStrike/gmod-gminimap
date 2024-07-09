@@ -30,15 +30,15 @@ do
         end
 
         --[[
-            flags used here, in order:
+            Texture flags used here, in order:
             - trilinear texture filtering
             - clamp S coordinates
             - clamp T coordinates
             - no mipmaps
             - no LODs (not affected by texture quality settings)
-            - is a render target (duh)
+            - is a depth render target (duh)
         ]]
-        local flags = bit.bor( 2, 4, 8, 256, 512, 32768 )
+        local flags = bit.bor( 2, 4, 8, 256, 512, 65536 )
         local rt = { isFree = false }
         local id = #rtCache + 1
 
@@ -47,7 +47,7 @@ do
         rt.texture = GetRenderTargetEx(
             "sdrawutils_rt_" .. id,
             1024, 1024,
-            RT_SIZE_OFFSCREEN,
+            RT_SIZE_LITERAL,
             MATERIAL_RT_DEPTH_SEPARATE,
             flags, 0,
             IMAGE_FORMAT_RGB888

@@ -223,6 +223,7 @@ function Radar:Capture( origin )
     PushFilterMag( 1 )
 
     local offset = 50000
+    local oldPanelClip = DisableClipping( true )
 
     render.RenderView( {
         origin = origin + Vector( 0, 0, offset ),
@@ -236,6 +237,7 @@ function Radar:Capture( origin )
         drawhud = false,
         drawmonitors = false,
         drawviewmodel = false,
+        dopostprocess = false,
         viewid = 2, -- VIEW_MONITOR
 
         ortho = {
@@ -245,6 +247,8 @@ function Radar:Capture( origin )
             bottom = self.area
         }
     } )
+
+    DisableClipping( oldPanelClip )
 
     render.SetLightingMode( 0 )
 
