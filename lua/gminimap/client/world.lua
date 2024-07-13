@@ -26,7 +26,7 @@ function World:Reset()
     self.activeLayerIndex = 0
 
     local world = game.GetWorld()
-    if not world then return end
+    if not IsValid( world ) then return end
     if not world.GetModelBounds then return end
 
     local mins, maxs = world:GetModelBounds()
@@ -46,6 +46,8 @@ function World:Reset()
 
     self.baseZoomRatio = ( avg / 25000 ) * 50
 end
+
+World:Reset()
 
 --- Load current map settings from `data_static/` if it exists.
 function World:LoadFromFile()
