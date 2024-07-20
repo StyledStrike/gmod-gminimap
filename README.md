@@ -1,6 +1,7 @@
 ## GMinimap
 
 [![GLuaLint](https://github.com/StyledStrike/gmod-gminimap/actions/workflows/glualint.yml/badge.svg)](https://github.com/FPtje/GLuaFixer)
+[![Workshop Page](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-steam-workshop.jross.me%2F3024317004%2Fsubscriptions-text)](https://steamcommunity.com/sharedfiles/filedetails/?id=3024317004)
 
 A customizable minimap for your game HUD.
 
