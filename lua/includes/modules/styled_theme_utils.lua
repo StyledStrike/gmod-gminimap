@@ -1,40 +1,41 @@
-local colors = {
-    black = Color( 0, 0, 0 ),
-    panelBackground = Color( 40, 40, 40, 200 ),
-    frameBackground = Color( 0, 0, 0, 240 ),
+local STheme = _G.STheme or {}
+local SThemeClasses = _G.SThemeClasses or {}
 
-    frameBorder = Color( 80, 80, 80, 255 ),
-    frameTitleBar = GMinimap.THEME_COLOR,
+_G.STheme = STheme
+_G.SThemeClasses = SThemeClasses
 
-    buttonBorder = Color( 150, 150, 150, 255 ),
-    buttonBackground = Color( 30, 30, 30, 255 ),
-    buttonBackgroundDisabled = Color( 10, 10, 10, 255 ),
-    buttonHover = Color( 255, 255, 255, 30 ),
-    buttonPress = GMinimap.THEME_COLOR,
+function STheme.New( t )
+    t = t or {}
 
-    buttonText = Color( 255, 255, 255, 255 ),
-    buttonTextDisabled = Color( 180, 180, 180, 255 ),
+    t.panelBackground = t.panelBackground or Color( 20, 20, 20, 200 )
+    t.frameBackground = t.frameBackground or Color( 0, 0, 0, 240 )
+    t.frameBorder = t.frameBorder or Color( 80, 80, 80, 255 )
+    t.frameTitleBar = t.frameTitleBar or Color( 25, 100, 170 )
 
-    entryBorder = Color( 100, 100, 100, 255 ),
-    entryBackground = Color( 10, 10, 10, 255 ),
-    entryHighlight = GMinimap.THEME_COLOR,
-    entryPlaceholder = Color( 150, 150, 150, 255 ),
-    entryText = Color( 255, 255, 255, 255 ),
+    t.buttonBorder = t.buttonBorder or Color( 150, 150, 150, 255 )
+    t.buttonBackground = t.buttonBackground or Color( 30, 30, 30, 255 )
+    t.buttonBackgroundDisabled = t.buttonBackgroundDisabled or Color( 10, 10, 10, 255 )
+    t.buttonHover = t.buttonHover or Color( 255, 255, 255, 30 )
+    t.buttonPress = t.buttonPress or Color( 25, 100, 170 )
 
-    labelText = Color( 255, 255, 255, 255 ),
-    indicatorBackground = Color( 200, 0, 0, 255 )
-}
+    t.buttonText = t.buttonText or Color( 255, 255, 255, 255 )
+    t.buttonTextDisabled = t.buttonTextDisabled or Color( 180, 180, 180, 255 )
 
-local Theme = GMinimap.Theme or {
-    classes = {}
-}
+    t.entryBorder = t.entryBorder or Color( 100, 100, 100, 255 )
+    t.entryBackground = t.entryBackground or Color( 10, 10, 10, 255 )
+    t.entryHighlight = t.entryHighlight or Color( 25, 100, 170 )
+    t.entryPlaceholder = t.entryPlaceholder or Color( 150, 150, 150, 255 )
+    t.entryText = t.entryText or Color( 255, 255, 255, 255 )
+    t.labelText = t.labelText or Color( 255, 255, 255, 255 )
 
-Theme.colors = colors
-GMinimap.Theme = Theme
+    return t
+end
 
-function Theme.Apply( panel, forceClass )
-    local class = Theme.classes[forceClass or panel.ClassName]
+function STheme.Apply( theme, panel, forceClass )
+    local class = SThemeClasses[forceClass or panel.ClassName]
     if not class then return end
+
+    panel._sTheme = theme
 
     if class.Prepare then
         class.Prepare( panel )
@@ -53,39 +54,52 @@ function Theme.Apply( panel, forceClass )
     end
 end
 
-----------
+local SetDrawColor = surface.SetDrawColor
+local MAT_BLUR = Material( "pp/blurscreen" )
+
+function STheme.BlurPanel( panel, density, alpha )
+    SetDrawColor( 255, 255, 255, alpha or 255 )
+    surface.SetMaterial( MAT_BLUR )
+
+    MAT_BLUR:SetFloat( "$blur", density or 4 )
+    MAT_BLUR:Recompute()
+
+    render.UpdateScreenEffectTexture()
+
+    local x, y = panel:LocalToScreen( 0, 0 )
+    surface.DrawTexturedRect( -x, -y, ScrW(), ScrH() )
+end
+
+---------- Supported panel classes ----------
 
 local Lerp = Lerp
 local FrameTime = FrameTime
 
 local DrawRect = surface.DrawRect
 local DrawRoundedBox = draw.RoundedBox
-local SetDrawColor = surface.SetDrawColor
 
-Theme.classes["DLabel"] = {
+SThemeClasses["DLabel"] = {
     Prepare = function( self )
-        self:SetColor( colors.labelText )
+        self:SetColor( self._sTheme.labelText )
     end
 }
 
-Theme.classes["DPanel"] = {
-    Paint = function( _, w, h )
-        SetDrawColor( colors.panelBackground:Unpack() )
+SThemeClasses["DPanel"] = {
+    Paint = function( self, w, h )
+        SetDrawColor( self._sTheme.panelBackground:Unpack() )
         DrawRect( 0, 0, w, h )
     end
 }
 
-Theme.classes["DButton"] = {
+SThemeClasses["DButton"] = {
     Prepare = function( self )
         self._hoverAnim = 0
-
-        self:SetText( self:GetText():Trim() )
-        self:SizeToContentsX( 10 )
     end,
 
     Paint = function( self, w, h )
         self._hoverAnim = Lerp( FrameTime() * 10, self._hoverAnim, ( self:IsEnabled() and self.Hovered ) and 1 or 0 )
 
+        local colors = self._sTheme
         local bgColor = self._themeHighlight and colors.buttonPress or colors.buttonBackground
 
         DrawRoundedBox( 4, 0, 0, w, h, colors.buttonBorder )
@@ -103,70 +117,72 @@ Theme.classes["DButton"] = {
 
     UpdateColours = function( self )
         if self:IsEnabled() then
-            self:SetTextStyleColor( colors.buttonText )
+            self:SetTextStyleColor( self._sTheme.buttonText )
         else
-            self:SetTextStyleColor( colors.buttonTextDisabled )
+            self:SetTextStyleColor( self._sTheme.buttonTextDisabled )
         end
     end
 }
 
-Theme.classes["DBinder"] = Theme.classes["DButton"]
+SThemeClasses["DBinder"] = SThemeClasses["DButton"]
 
-Theme.classes["DTextEntry"] = {
+SThemeClasses["DTextEntry"] = {
     Prepare = function( self )
         self:SetDrawBorder( false )
         self:SetPaintBackground( false )
 
-        self:SetTextColor( colors.entryText )
-        self:SetCursorColor( colors.entryText )
-        self:SetHighlightColor( colors.entryHighlight )
-        self:SetPlaceholderColor( colors.entryPlaceholder )
+        self:SetTextColor( self._sTheme.entryText )
+        self:SetCursorColor( self._sTheme.entryText )
+        self:SetHighlightColor( self._sTheme.entryHighlight )
+        self:SetPlaceholderColor( self._sTheme.entryPlaceholder )
     end,
 
     Paint = function( self, w, h )
-        SetDrawColor( colors.entryBorder:Unpack() )
+        SetDrawColor( self._sTheme.entryBorder:Unpack() )
         surface.DrawOutlinedRect( 0, 0, w, h, 1 )
 
-        SetDrawColor( colors.entryBackground:Unpack() )
+        SetDrawColor( self._sTheme.entryBackground:Unpack() )
         DrawRect( 1, 1, w - 2, h - 2 )
 
         derma.SkinHook( "Paint", "TextEntry", self, w, h )
     end
 }
 
-Theme.classes["DComboBox"] = {
+SThemeClasses["DComboBox"] = {
     Prepare = function( self )
-        self:SetTextColor( colors.entryText )
+        self:SetTextColor( self._sTheme.entryText )
     end,
 
-    Paint = function( _, w, h )
-        SetDrawColor( colors.entryBorder:Unpack() )
+    Paint = function( self, w, h )
+        SetDrawColor( self._sTheme.entryBorder:Unpack() )
         surface.DrawOutlinedRect( 0, 0, w, h, 1 )
 
-        SetDrawColor( colors.entryBackground:Unpack() )
+        SetDrawColor( self._sTheme.entryBackground:Unpack() )
         DrawRect( 1, 1, w - 2, h - 2 )
     end
 }
 
-Theme.classes["DNumSlider"] = {
+SThemeClasses["DNumSlider"] = {
     Prepare = function( self )
-        Theme.Apply( self.TextArea )
-        Theme.Apply( self.Label )
+        STheme.Apply( self._sTheme, self.TextArea )
+        STheme.Apply( self._sTheme, self.Label )
     end
 }
 
-Theme.classes["DScrollPanel"] = {
+SThemeClasses["DScrollPanel"] = {
     Prepare = function( self )
-        Theme.Apply( self.VBar )
+        STheme.Apply( self._sTheme, self.VBar )
     end,
 
-    Paint = function( _, w, h )
-        SetDrawColor( colors.panelBackground:Unpack() )
+    Paint = function( self, w, h )
+        SetDrawColor( self._sTheme.panelBackground:Unpack() )
         DrawRect( 0, 0, w, h )
     end
 }
 
 local function DrawGrip( self, w, h )
+    local colors = self._sTheme
+
     SetDrawColor( colors.buttonBorder:Unpack() )
     DrawRect( 0, 0, w, h )
 
@@ -183,13 +199,14 @@ local function DrawGrip( self, w, h )
     end
 end
 
-Theme.classes["DVScrollBar"] = {
+SThemeClasses["DVScrollBar"] = {
     Prepare = function( self )
+        self.btnGrip._sTheme = self._sTheme
         self.btnGrip.Paint = DrawGrip
     end,
 
-    Paint = function( _, w, h )
-        SetDrawColor( colors.entryBackground:Unpack() )
+    Paint = function( self, w, h )
+        SetDrawColor( self._sTheme.entryBackground:Unpack() )
         DrawRect( 0, 0, w, h )
     end
 }
@@ -207,11 +224,11 @@ local function SlideThink( anim, panel, fraction )
     panel:SetAlpha( 255 * panel._animAlpha )
 end
 
-Theme.classes["DFrame"] = {
+SThemeClasses["DFrame"] = {
     Prepare = function( self )
         self._animAlpha = 0
         self._OriginalClose = self.Close
-        self.lblTitle:SetColor( colors.labelText )
+        self.lblTitle:SetColor( self._sTheme.labelText )
 
         local anim = self:NewAnimation( 0.4, 0, 0.25 )
         anim.StartOffset = -80
@@ -243,7 +260,11 @@ Theme.classes["DFrame"] = {
     Paint = function( self, w, h )
         if self.m_bBackgroundBlur then
             Derma_DrawBackgroundBlur( self, self.m_fCreateTime )
+        else
+            STheme.BlurPanel( self, 2, 255 * self._animAlpha )
         end
+
+        local colors = self._sTheme
 
         SetDrawColor( colors.frameBorder:Unpack() )
         surface.DrawOutlinedRect( 0, 0, w, h, 1 )

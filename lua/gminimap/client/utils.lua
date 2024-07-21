@@ -56,6 +56,8 @@ function GMinimap.SaveDataFile( path, data )
     file.Write( GMinimap.DATA_DIR .. path, data )
 end
 
+local ApplyTheme = GMinimap.ApplyTheme
+
 function GMinimap.CreateToggleButton( parent, label, isChecked, callback )
     local button = vgui.Create( "DButton", parent )
     button:SetTall( 30 )
@@ -65,7 +67,7 @@ function GMinimap.CreateToggleButton( parent, label, isChecked, callback )
     button:DockMargin( 0, 0, 0, 4 )
     button._isChecked = isChecked
 
-    GMinimap.Theme.Apply( button )
+    ApplyTheme( button )
 
     button.DoClick = function( s )
         s._isChecked = not s._isChecked
@@ -83,7 +85,7 @@ function GMinimap.CreatePropertyLabel( text, parent )
     label:SetText( text )
     label:SetTall( 26 )
 
-    GMinimap.Theme.Apply( label )
+    ApplyTheme( label )
 
     return label
 end
@@ -98,8 +100,7 @@ function GMinimap.CreateHeader( text, parent, mleft, mtop, mright, mbottom )
     panel:SetTall( 32 )
     panel:Dock( TOP )
     panel:DockMargin( mleft, mtop, mright, mbottom )
-
-    panel:SetBackgroundColor( GMinimap.Theme.colors.frameBackground )
+    panel:SetBackgroundColor( color_black )
 
     local label = vgui.Create( "DLabel", panel )
     label:SetText( text )
@@ -107,7 +108,7 @@ function GMinimap.CreateHeader( text, parent, mleft, mtop, mright, mbottom )
     label:SizeToContents()
     label:Dock( FILL )
 
-    GMinimap.Theme.Apply( label )
+    ApplyTheme( label )
 
     return panel
 end
@@ -122,7 +123,7 @@ function GMinimap.CreateSlider( parent, label, default, min, max, decimals, call
     slider:SetDecimals( decimals )
     slider:Dock( TOP )
 
-    GMinimap.Theme.Apply( slider )
+    ApplyTheme( slider )
 
     slider.OnValueChanged = function( _, value )
         callback( decimals == 0 and math.floor( value ) or math.Round( value, decimals ) )

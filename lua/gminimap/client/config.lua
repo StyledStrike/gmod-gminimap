@@ -152,7 +152,7 @@ function Config:SetupPanel( parent )
     }
 
     local L = GMinimap.GetLanguageText
-    local ApplyTheme = GMinimap.Theme.Apply
+    local ApplyTheme = GMinimap.ApplyTheme
 
     local CreateHeader = GMinimap.CreateHeader
     local CreateSlider = GMinimap.CreateSlider

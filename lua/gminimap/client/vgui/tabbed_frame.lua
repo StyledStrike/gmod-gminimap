@@ -1,6 +1,6 @@
 local L = GMinimap.GetLanguageText
-local ApplyTheme = GMinimap.Theme.Apply
-local colors = GMinimap.Theme.colors
+local ApplyTheme = GMinimap.ApplyTheme
+local colors = GMinimap.Theme
 
 local TabButton = {}
 

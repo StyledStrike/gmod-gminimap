@@ -110,7 +110,7 @@ function Landmarks:SetupPanel( parent )
     end
 
     local L = GMinimap.GetLanguageText
-    local ApplyTheme = GMinimap.Theme.Apply
+    local ApplyTheme = GMinimap.ApplyTheme
 
     local function OnLandmarksChanged()
         self:Save()

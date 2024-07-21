@@ -57,8 +57,8 @@ if SERVER then
     include( "gminimap/server/main.lua" )
 
     AddCSLuaFile( "includes/modules/styled_draw_utils.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme_utils.lua" )
 
-    AddCSLuaFile( "gminimap/client/theme.lua" )
     AddCSLuaFile( "gminimap/client/utils.lua" )
     AddCSLuaFile( "gminimap/client/blips.lua" )
     AddCSLuaFile( "gminimap/client/config.lua" )
@@ -75,8 +75,18 @@ end
 
 if CLIENT then
     require( "styled_draw_utils" )
+    require( "styled_theme_utils" )
 
-    include( "gminimap/client/theme.lua" )
+    GMinimap.Theme = STheme.New( {
+        frameTitleBar = GMinimap.THEME_COLOR,
+        buttonPress = GMinimap.THEME_COLOR,
+        entryHighlight = GMinimap.THEME_COLOR
+    } )
+
+    function GMinimap.ApplyTheme( panel, forceClass )
+        STheme.Apply( GMinimap.Theme, panel, forceClass )
+    end
+
     include( "gminimap/client/utils.lua" )
     include( "gminimap/client/blips.lua" )
     include( "gminimap/client/config.lua" )

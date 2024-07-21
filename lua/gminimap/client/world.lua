@@ -206,7 +206,7 @@ end )
 
 function World:OpenLayers()
     local L = GMinimap.GetLanguageText
-    local ApplyTheme = GMinimap.Theme.Apply
+    local ApplyTheme = GMinimap.ApplyTheme
 
     local CreateSlider = GMinimap.CreateSlider
     local CreatePropertyLabel = GMinimap.CreatePropertyLabel
@@ -296,7 +296,7 @@ function World:OpenLayers()
     end
 
     -- Item panel functions
-    local colors = GMinimap.Theme.colors
+    local colors = GMinimap.Theme
 
     local function PaintItem( s, w, h )
         local bgColor = s._isSelected and colors.buttonPress or colors.frameBorder
