@@ -13,7 +13,9 @@ function GMinimap.SetNumber( t, k, v, min, max, default )
 end
 
 function GMinimap.SetBool( t, k, v )
-    t[k] = tobool( v )
+    if v ~= nil then
+        t[k] = tobool( v )
+    end
 end
 
 function GMinimap.SetColor( t, k, r, g, b )

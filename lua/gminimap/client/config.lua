@@ -55,6 +55,8 @@ function Config:Load()
     SetNumber( self, "toggleKey", data.toggleKey, KEY_NONE, BUTTON_CODE_LAST, self.toggleKey )
     SetNumber( self, "expandKey", data.expandKey, KEY_NONE, BUTTON_CODE_LAST, self.expandKey )
     SetNumber( self, "zoom", data.zoom, 0.5, 1.5, self.zoom )
+    SetNumber( self, "pivotOffset", data.pivotOffset, 0, 1, self.pivotOffset )
+    SetBool( self, "lockRotation", data.lockRotation )
 
     SetNumber( self, "x", data.x, 0, 1, self.x )
     SetNumber( self, "y", data.y, 0, 1, self.y )
@@ -96,6 +98,8 @@ function Config:Save( immediate )
         expandKey = self.expandKey,
 
         zoom = self.zoom,
+        pivotOffset = self.pivotOffset,
+        lockRotation = self.lockRotation,
 
         x = self.x,
         y = self.y,
