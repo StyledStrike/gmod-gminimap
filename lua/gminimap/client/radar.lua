@@ -151,8 +151,14 @@ function Radar:Draw()
         self.lastGridX = gridPos[1]
         self.lastGridY = gridPos[2]
 
-        self.lastCapturePos = gridPos
-        self:Capture( gridPos )
+        local hookId = "GMinimap.Capture_" .. self.rtId
+
+        hook.Add( "PreRender", hookId, function()
+            hook.Remove( "PreRender", hookId )
+
+            self.lastCapturePos = gridPos
+            self:Capture( gridPos )
+        end )
     end
 
     -- When the origin moves away from out last captured position,
