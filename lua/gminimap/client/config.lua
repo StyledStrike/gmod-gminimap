@@ -145,6 +145,8 @@ Config:Load()
 function Config:SetupPanel( parent )
     parent:Clear()
 
+    local L = GMinimap.GetLanguageText
+
     local function OnChangeConfig()
         self:Save()
         hook.Run( "OnGMinimapConfigChange" )
@@ -154,15 +156,6 @@ function Config:SetupPanel( parent )
         [MOUSE_LEFT] = true,
         [MOUSE_RIGHT] = true
     }
-
-    local L = GMinimap.GetLanguageText
-    local ApplyTheme = GMinimap.ApplyTheme
-
-    local CreateHeader = GMinimap.CreateHeader
-    local CreateSlider = GMinimap.CreateSlider
-    local CreateColorPicker = GMinimap.CreateColorPicker
-    local CreateToggleButton = GMinimap.CreateToggleButton
-    local CreatePropertyLabel = GMinimap.CreatePropertyLabel
 
     local function OnBindChange( binder, keyNum, configKey, title )
         if IGNORE_BIND_KEYS[keyNum] then
@@ -176,17 +169,11 @@ function Config:SetupPanel( parent )
         self:Save()
     end
 
-    local scroll = vgui.Create( "DScrollPanel", parent )
-    scroll:Dock( FILL )
-    scroll.pnlCanvas:DockPadding( 90, 8, 90, 8 )
-
-    ApplyTheme( scroll )
-
     ----- General settings
-    CreateHeader( L"title", scroll, -50, 0, -50, 10 )
+    StyledTheme.CreateFormHeader( parent, L"title", 0 )
 
     -- Toggle minimap
-    CreateToggleButton( scroll, L"enable", self.enable, function( checked )
+    StyledTheme.CreateFormToggle( parent, L"enable", self.enable, function( checked )
         self.enable = checked
 
         if checked then
@@ -199,13 +186,7 @@ function Config:SetupPanel( parent )
     end )
 
     -- Reset settings
-    local buttonReset = vgui.Create( "DButton", scroll )
-    buttonReset:SetText( L"reset" )
-    buttonReset:Dock( TOP )
-
-    ApplyTheme( buttonReset )
-
-    buttonReset.DoClick = function()
+    StyledTheme.CreateFormButton( parent, L"reset", function()
         Derma_Query( L"reset_query", L"reset", L"yes", function()
             self:Reset()
             self:Save()
@@ -216,51 +197,35 @@ function Config:SetupPanel( parent )
                 self:SetupPanel( parent )
             end )
         end, L"no" )
-    end
+    end )
 
-    -- Minimap toggle bind
-    CreatePropertyLabel( L"toggle_key", scroll ):DockMargin( 0, 4, 0, 0 )
-
-    local binderToggle = vgui.Create( "DBinder", scroll )
-    binderToggle:Dock( TOP )
-    binderToggle:SetValue( self.toggleKey )
-
-    ApplyTheme( binderToggle, "DButton" )
-
+    local binderToggle = StyledTheme.CreateFormBinder( parent, L"toggle_key", self.toggleKey )
     binderToggle.OnChange = function( _, num )
         OnBindChange( binderToggle, num, "toggleKey", "toggle_key" )
     end
 
-    -- Expanded toggle bind
-    CreatePropertyLabel( L"expand_key", scroll ):DockMargin( 0, 4, 0, 0 )
-
-    local binderExpand = vgui.Create( "DBinder", scroll )
-    binderExpand:Dock( TOP )
-    binderExpand:SetValue( self.expandKey )
-
-    ApplyTheme( binderExpand, "DButton" )
-
+    local binderExpand = StyledTheme.CreateFormBinder( parent, L"expand_key", self.expandKey )
     binderExpand.OnChange = function( _, num )
         OnBindChange( binderExpand, num, "expandKey", "expand_key" )
     end
 
     ----- Radar properties
-    CreateHeader( L"radar", scroll, -50, 10, -50, 10 )
+    StyledTheme.CreateFormHeader( parent, L"radar" )
 
     -- Lock rotation
-    CreateToggleButton( scroll, L"lock_rotation", self.lockRotation, function( checked )
+    StyledTheme.CreateFormToggle( parent, L"lock_rotation", self.lockRotation, function( checked )
         self.lockRotation = checked
         OnChangeConfig()
     end )
 
     -- Radar zoom
-    CreateSlider( scroll, L"zoom", self.zoom, 0.5, 1.5, 3, function( value )
+    StyledTheme.CreateFormSlider( parent, L"zoom", self.zoom, 0.5, 1.5, 2, function( value )
         self.zoom = value
         OnChangeConfig()
     end )
 
     -- Radar pivot offset
-    CreateSlider( scroll, L"pivot_offset", self.pivotOffset, 0, 1, 2, function( value )
+    StyledTheme.CreateFormSlider( parent, L"pivot_offset", self.pivotOffset, 0, 1, 2, function( value )
         self.pivotOffset = value
         OnChangeConfig()
     end )
@@ -272,118 +237,118 @@ function Config:SetupPanel( parent )
     local forceH = GetConVar( "gminimap_force_h" ):GetFloat()
 
     if forceX >= 0 or forceY >= 0 or forceW >= 0 or forceH >= 0 then
-        CreateHeader( L"forced_config", scroll ):SetTall( 24 )
+        StyledTheme.CreateFormLabel( parent, L"forced_config" ):SetContentAlignment( 5 )
     end
 
-    CreateSlider( scroll, "X", self.x, 0, 1, 3, function( value )
+    StyledTheme.CreateFormSlider( parent, "X", self.x, 0, 1, 3, function( value )
         self.x = value
         OnChangeConfig()
     end ):SetEnabled( forceX < 0 )
 
-    CreateSlider( scroll, "Y", self.y, 0, 1, 3, function( value )
+    StyledTheme.CreateFormSlider( parent, "Y", self.y, 0, 1, 3, function( value )
         self.y = value
         OnChangeConfig()
     end ):SetEnabled( forceY < 0 )
 
-    CreateSlider( scroll, L"width", self.width, 0.1, 0.5, 2, function( value )
+    StyledTheme.CreateFormSlider( parent, L"width", self.width, 0.1, 0.5, 2, function( value )
         self.width = value
         OnChangeConfig()
     end ):SetEnabled( forceW < 0 )
 
-    CreateSlider( scroll, L"height", self.height, 0.1, 0.5, 2, function( value )
+    StyledTheme.CreateFormSlider( parent, L"height", self.height, 0.1, 0.5, 2, function( value )
         self.height = value
         OnChangeConfig()
     end ):SetEnabled( forceH < 0 )
 
     -- Radar border
-    CreateSlider( scroll, L"border_thickness", self.borderThickness, 0, 16, 0, function( value )
+    StyledTheme.CreateFormSlider( parent, L"border_thickness", self.borderThickness, 0, 16, 0, function( value )
         self.borderThickness = value
         OnChangeConfig()
     end )
 
-    CreatePropertyLabel( L"border_color", scroll )
+    StyledTheme.CreateFormLabel( parent, L"border_color" )
 
-    CreateColorPicker( scroll, self.borderColor, function( color )
+    GMinimap.CreateColorPicker( parent, self.borderColor, function( color )
         self.borderColor = color
         OnChangeConfig()
     end )
 
     ----- Terrain properties
-    CreateHeader( L"terrain", scroll, -50, 10, -50, 10 )
+    StyledTheme.CreateFormHeader( parent, L"terrain" )
 
     -- Terrain lighting
-    CreateToggleButton( scroll, L"terrain_lighting", self.terrainLighting, function( checked )
+    StyledTheme.CreateFormToggle( parent, L"terrain_lighting", self.terrainLighting, function( checked )
         self.terrainLighting = checked
         OnChangeConfig()
     end )
 
     -- Terrain brightness
-    CreateSlider( scroll, L"terrain_brightness", self.terrainBrightness, -1, 1, 1, function( value )
+    StyledTheme.CreateFormSlider( parent, L"terrain_brightness", self.terrainBrightness, -1, 1, 1, function( value )
         self.terrainBrightness = value
         OnChangeConfig()
     end )
 
     -- Terrain saturation
-    CreateSlider( scroll, L"terrain_saturation", self.terrainColorMult, 0, 2, 1, function( value )
+    StyledTheme.CreateFormSlider( parent, L"terrain_saturation", self.terrainColorMult, 0, 2, 1, function( value )
         self.terrainColorMult = value
         OnChangeConfig()
     end )
 
     -- Terrain color inversion
-    CreateSlider( scroll, L"terrain_color_inv", self.terrainColorInv, 0, 1, 1, function( value )
+    StyledTheme.CreateFormSlider( parent, L"terrain_color_inv", self.terrainColorInv, 0, 1, 1, function( value )
         self.terrainColorInv = value
         OnChangeConfig()
     end )
 
     -- Terrain tint
-    CreatePropertyLabel( L"terrain_color", scroll )
+    StyledTheme.CreateFormLabel( parent, L"terrain_color" )
 
-    CreateColorPicker( scroll, self.terrainColor, function( color )
+    GMinimap.CreateColorPicker( parent, self.terrainColor, function( color )
         self.terrainColor = color
         OnChangeConfig()
     end )
 
     ----- Health/armor properties
-    CreateHeader( L"health_armor", scroll, -50, 10, -50, 10 )
+    StyledTheme.CreateFormHeader( parent, L"health_armor" )
 
     -- Toggle custom health/armor
-    CreateToggleButton( scroll, L"health_show_custom", self.showCustomHealth, function( checked )
+    StyledTheme.CreateFormToggle( parent, L"health_show_custom", self.showCustomHealth, function( checked )
         self.showCustomHealth = checked
         OnChangeConfig()
     end )
 
     -- Toggle hide default health/armor
-    CreateToggleButton( scroll, L"health_hide_default", self.hideDefaultHealth, function( checked )
+    StyledTheme.CreateFormToggle( parent, L"health_hide_default", self.hideDefaultHealth, function( checked )
         self.hideDefaultHealth = checked
         OnChangeConfig()
     end )
 
     -- Health/armor height
-    CreateSlider( scroll, L"health_height", self.healthHeight, 2, 32, 0, function( value )
+    StyledTheme.CreateFormSlider( parent, L"health_height", self.healthHeight, 2, 32, 0, function( value )
         self.healthHeight = value
         OnChangeConfig()
     end )
 
     -- Health color
-    CreatePropertyLabel( L"health_color", scroll )
+    StyledTheme.CreateFormLabel( parent, L"health_color" )
 
-    CreateColorPicker( scroll, self.healthColor, function( color )
+    GMinimap.CreateColorPicker( parent, self.healthColor, function( color )
         self.healthColor = color
         OnChangeConfig()
     end )
 
     -- Low health color
-    CreatePropertyLabel( L"low_health_color", scroll )
+    StyledTheme.CreateFormLabel( parent, L"low_health_color" )
 
-    CreateColorPicker( scroll, self.lowhealthColor, function( color )
+    GMinimap.CreateColorPicker( parent, self.lowhealthColor, function( color )
         self.lowhealthColor = color
         OnChangeConfig()
     end )
 
     -- Armor color
-    CreatePropertyLabel( L"armor_color", scroll )
+    StyledTheme.CreateFormLabel( parent, L"armor_color" )
 
-    CreateColorPicker( scroll, self.armorColor, function( color )
+    GMinimap.CreateColorPicker( parent, self.armorColor, function( color )
         self.armorColor = color
         OnChangeConfig()
     end )

@@ -80,6 +80,12 @@ function Landmarks:Update()
 end
 
 function Landmarks:SetupPanel( parent )
+    parent:Clear()
+
+    local L = GMinimap.GetLanguageText
+    local ApplyTheme = StyledTheme.Apply
+    local ScaleSize = StyledTheme.ScaleSize
+
     local radar = vgui.Create( "GMinimap_Radar", parent )
     radar:SetOrigin( LocalPlayer():GetPos() )
     radar:SetRatio( GMinimap.World.baseZoomRatio )
@@ -87,30 +93,27 @@ function Landmarks:SetupPanel( parent )
     radar:Dock( FILL )
 
     local helpLabel1 = vgui.Create( "DLabel", radar )
-    helpLabel1:SetTall( 16 )
     helpLabel1:SetText( "#gminimap.landmarks_help2" )
-    helpLabel1:SetFont( "ChatFont" )
-    helpLabel1:SetColor( color_white )
+    ApplyTheme( helpLabel1 )
+    helpLabel1:SizeToContents()
 
     local helpLabel2 = vgui.Create( "DLabel", radar )
-    helpLabel2:SetTall( 16 )
     helpLabel2:SetText( "#gminimap.landmarks_help1" )
-    helpLabel2:SetFont( "ChatFont" )
-    helpLabel2:SetColor( color_white )
+    ApplyTheme( helpLabel2 )
+    helpLabel2:SizeToContents()
 
     local OriginalPerformLayout = radar.PerformLayout
 
     radar.PerformLayout = function( s, w, h )
         OriginalPerformLayout( s, w, h )
 
+        local spacing = ScaleSize( 6 )
+
         helpLabel1:SetWide( w )
         helpLabel2:SetWide( w )
-        helpLabel1:SetPos( 4, 4 )
-        helpLabel2:SetPos( 4, 24 )
+        helpLabel1:SetPos( spacing, spacing )
+        helpLabel2:SetPos( spacing, helpLabel1:GetTall() + spacing * 2 )
     end
-
-    local L = GMinimap.GetLanguageText
-    local ApplyTheme = GMinimap.ApplyTheme
 
     local function OnLandmarksChanged()
         self:Save()
@@ -120,32 +123,30 @@ function Landmarks:SetupPanel( parent )
     local SetEditingLine, StopEditing
 
     ----- Landmarks list -----
-
     local landmarksPanel = vgui.Create( "DPanel", parent )
-    landmarksPanel:SetWide( 200 )
-    landmarksPanel:SetPaintBackground( false )
+    landmarksPanel:SetWide( ScaleSize( 240 ) )
     landmarksPanel:Dock( LEFT )
-    landmarksPanel:DockMargin( 0, 0, 4, 0 )
+    landmarksPanel:DockMargin( 0, 0, ScaleSize( 4 ), 0 )
+    ApplyTheme( landmarksPanel )
 
     -- Landmarks header
     local landmarksHeader = vgui.Create( "DLabel", landmarksPanel )
-    landmarksHeader:SetTall( 16 )
     landmarksHeader:SetText( game.GetMap() )
     landmarksHeader:SetContentAlignment( 5 )
     landmarksHeader:Dock( TOP )
-
+    landmarksHeader:DockMargin( 0, ScaleSize( 6 ), 0, ScaleSize( 6 ) )
     ApplyTheme( landmarksHeader )
+    landmarksHeader:SizeToContents()
 
     -- Landmarks list
     local landmarkList = vgui.Create( "DScrollPanel", landmarksPanel )
     landmarkList:Dock( FILL )
-    landmarkList:DockMargin( 0, 4, 0, 0 )
-    landmarkList.pnlCanvas:DockPadding( 4, 4, 4, 4 )
+    ApplyTheme( landmarkList )
 
     -- Workaround for `URLTexturedRectRotated` not obeying panel clipping
+    landmarkList.OriginalPaint = landmarkList.Paint
     landmarkList.Paint = function( s, w, h )
-        surface.SetDrawColor( 40, 40, 40, 200 )
-        surface.DrawRect( 0, 0, w, h )
+        s:OriginalPaint( w, h )
 
         local x, y = s:LocalToScreen( 0, 0 )
         render.SetScissorRect( x, y, x + w, y + h, true )
@@ -157,7 +158,7 @@ function Landmarks:SetupPanel( parent )
 
     local function ClearSelection()
         for _, line in ipairs( landmarkList.pnlCanvas:GetChildren() ) do
-            line._themeHighlight = false
+            line.isChecked = false
         end
     end
 
@@ -185,9 +186,10 @@ function Landmarks:SetupPanel( parent )
         return landmark.label or math.Round( landmark.x, 2 ) .. " / " .. math.Round( landmark.y, 2 )
     end
 
-    local function PaintLine( s, _, h )
+    local function PaintLine( s, w, h )
         local x, y = s:LocalToScreen( 0, 0 )
-        SDrawUtils.URLTexturedRectRotated( s._landmarkIcon, x + h * 0.5, y + h * 0.5, h * 0.8, h * 0.8, 0, s._landmarkColor )
+        local size = h * 0.8
+        SDrawUtils.URLTexturedRectRotated( s._landmarkIcon, x + w - h * 0.5, y + h * 0.5, size, size, 0, s._landmarkColor )
     end
 
     local function OnClickLine( s )
@@ -210,15 +212,20 @@ function Landmarks:SetupPanel( parent )
     local function AddLine( index, landmark )
         local line = vgui.Create( "DButton", landmarkList )
         line:SetText( GetLabel( landmark ) )
-        line:SetTall( 24 )
+        line:SetContentAlignment( 4 )
+        line:SetTextInset( ScaleSize( 6 ), 0 )
         line:Dock( TOP )
-        line:DockMargin( 0, 0, 0, 2 )
+        line:DockMargin( 0, 0, 0, ScaleSize( 4 ) )
 
         ApplyTheme( line )
+        line:SetTall( ScaleSize( 32 ) )
 
         line._landmarkIndex = index
         line._landmarkIcon = landmark.icon
         line._landmarkColor = Color( landmark.r, landmark.g, landmark.b )
+        line.isToggle = true
+        line.isChecked = false
+
         line.PaintOver = PaintLine
         line.DoClick = OnClickLine
         line.DoRightClick = RemoveLandmarkByLine
@@ -256,12 +263,7 @@ function Landmarks:SetupPanel( parent )
     end
 
     ----- Landmark editor -----
-
     local editing
-
-    local CreateHeader = GMinimap.CreateHeader
-    local CreateSlider = GMinimap.CreateSlider
-    local CreateColorPicker = GMinimap.CreateColorPicker
 
     local function CreateMenuPanel( class, w, h )
         local pnl = vgui.Create( class )
@@ -278,18 +280,25 @@ function Landmarks:SetupPanel( parent )
     local landmarkEditor = vgui.Create( "DScrollPanel", landmarksPanel )
     landmarkEditor:SetTall( 0 )
     landmarkEditor:Dock( BOTTOM )
-    landmarkEditor:DockMargin( 0, 4, 0, 0 )
-    landmarkEditor.pnlCanvas:DockPadding( 4, 4, 4, 4 )
-
+    landmarkEditor:DockMargin( 0, ScaleSize( 4 ), 0, 0 )
     ApplyTheme( landmarkEditor )
 
+    local removeButton = vgui.Create( "DButton", landmarkEditor )
+    removeButton:SetText( L"landmark_remove" )
+    removeButton:Dock( TOP )
+    removeButton:DockMargin( 0, 0, 0, ScaleSize( 4 ) )
+    ApplyTheme( removeButton )
+
+    removeButton.DoClick = function()
+        RemoveLandmarkByLine( editing.line )
+    end
+
     -- Landmark label
-    CreateHeader( L"landmark_label", landmarkEditor, 0, 0, 0, 4 ):SetTall( 18 )
+    StyledTheme.CreateFormHeader( landmarkEditor, L"landmark_label", 0 )
 
     local editLabelEntry = vgui.Create( "DTextEntry", landmarkEditor )
     editLabelEntry:Dock( TOP )
     editLabelEntry:SetUpdateOnType( true )
-
     ApplyTheme( editLabelEntry )
 
     editLabelEntry.OnChange = function( s )
@@ -304,11 +313,11 @@ function Landmarks:SetupPanel( parent )
     end
 
     -- Landmark icon
-    CreateHeader( L"landmark_icon", landmarkEditor, 0, 4, 0, 4 ):SetTall( 18 )
+    StyledTheme.CreateFormHeader( landmarkEditor, L"landmark_icon" )
 
     local editIconPanel = vgui.Create( "DPanel", landmarkEditor )
     editIconPanel:Dock( TOP )
-    editIconPanel:DockMargin( 0, 4, 0, 0 )
+    editIconPanel:DockMargin( 0, ScaleSize( 4 ), 0, ScaleSize( 6 ) )
     editIconPanel:SetPaintBackground( false )
 
     local function OnSelectIcon( path )
@@ -323,18 +332,19 @@ function Landmarks:SetupPanel( parent )
     local selBuiltinButton = vgui.Create( "DButton", editIconPanel )
     selBuiltinButton:SetText( L"builtin_icons" )
     selBuiltinButton:Dock( FILL )
-    selBuiltinButton:DockMargin( 0, 2, 0, 2 )
-
     ApplyTheme( selBuiltinButton )
+    selBuiltinButton:SetFont( "StyledTheme_Tiny" )
 
     selBuiltinButton.DoClick = function()
-        local iconsPanel = CreateMenuPanel( "DScrollPanel", 256, 256 )
+        local iconsPanel = CreateMenuPanel( "DScrollPanel", ScaleSize( 300 ), ScaleSize( 280 ) )
         iconsPanel:SetPaintBackground( true )
 
+        local spacing = ScaleSize( 6 )
+
         local iconLayout = vgui.Create( "DIconLayout", iconsPanel )
-        iconLayout:SetSpaceX( 4 )
-        iconLayout:SetSpaceY( 4 )
-        iconLayout:SetBorder( 4 )
+        iconLayout:SetSpaceX( spacing )
+        iconLayout:SetSpaceY( spacing )
+        iconLayout:SetBorder( spacing )
         iconLayout:Dock( FILL )
 
         local function OnClickIcon( s )
@@ -360,12 +370,12 @@ function Landmarks:SetupPanel( parent )
     local selSilkButton = vgui.Create( "DButton", editIconPanel )
     selSilkButton:SetText( L"gmod_icons" )
     selSilkButton:Dock( RIGHT )
-    selSilkButton:DockMargin( 2, 2, 0, 2 )
-
+    selSilkButton:DockMargin( 2, 0, 0, 0 )
     ApplyTheme( selSilkButton )
+    selSilkButton:SetFont( "StyledTheme_Tiny" )
 
     selSilkButton.DoClick = function()
-        local iconBrowser = CreateMenuPanel( "DIconBrowser", 256, 256 )
+        local iconBrowser = CreateMenuPanel( "DIconBrowser", ScaleSize( 300 ), ScaleSize( 280 ) )
 
         iconBrowser.OnChange = function( s )
             OnSelectIcon( s:GetSelectedIcon() )
@@ -373,7 +383,7 @@ function Landmarks:SetupPanel( parent )
         end
     end
 
-    local editScaleSlider = CreateSlider( landmarkEditor, L"scale", 1, 0.5, 2, 2, function( value )
+    local editScaleSlider = StyledTheme.CreateFormSlider( landmarkEditor, L"scale", 1, 0.5, 2, 2, function( value )
         if not editing then return end
 
         editing.landmark.scale = value
@@ -384,13 +394,10 @@ function Landmarks:SetupPanel( parent )
         s.Label:SizeToContents()
     end
 
-    editScaleSlider:SetTall( 20 )
-    editScaleSlider:DockMargin( 0, 6, 0, 6 )
-
     -- Landmark icon color
-    CreateHeader( L"landmark_icon_color", landmarkEditor, 0, 4, 0, 4 ):SetTall( 18 )
+    StyledTheme.CreateFormHeader( landmarkEditor, L"landmark_icon_color" )
 
-    local editColor = CreateColorPicker( landmarkEditor, nil, function( c )
+    local editColor = GMinimap.CreateColorPicker( landmarkEditor, nil, function( c )
         if not editing then return end
 
         editing.landmark.r = c.r
@@ -401,19 +408,7 @@ function Landmarks:SetupPanel( parent )
         OnLandmarksChanged()
     end )
 
-    editColor:SetTall( 200 )
-
-    local removeButton = vgui.Create( "DButton", landmarkEditor )
-    removeButton:SetTall( 20 )
-    removeButton:SetText( L"landmark_remove" )
-    removeButton:Dock( TOP )
-    removeButton:DockMargin( 0, 6, 0, 0 )
-
-    ApplyTheme( removeButton )
-
-    removeButton.DoClick = function()
-        RemoveLandmarkByLine( editing.line )
-    end
+    editColor:SetTall( ScaleSize( 240 ) )
 
     ----- Define the editing functions
 
@@ -443,8 +438,8 @@ function Landmarks:SetupPanel( parent )
             end
         end )
 
-        landmarkEditor:SizeTo( -1, 200, 0.2, 0, 0.3 )
-        line._themeHighlight = true
+        landmarkEditor:SizeTo( -1, ScaleSize( 300 ), 0.2, 0, 0.3 )
+        line.isChecked = true
 
         editing = {
             line = line,

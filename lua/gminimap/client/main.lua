@@ -54,7 +54,12 @@ function GMinimap:OpenFrame( tabIndex )
         return
     end
 
-    local frame = vgui.Create( "GMinimap_TabbedFrame" )
+    local L = GMinimap.GetLanguageText
+
+    local frame = vgui.Create( "Styled_TabbedFrame" )
+    frame:SetTitle( L"title" )
+    frame:SetIcon( "gminimap/gminimap.png" )
+    frame:SetSize( StyledTheme.ScaleSize( 1000 ), StyledTheme.ScaleSize( 700 ) )
     frame:Center()
     frame:MakePopup()
 
@@ -64,8 +69,8 @@ function GMinimap:OpenFrame( tabIndex )
 
     self.frame = frame
 
-    local landmarksPanel = frame:AddTab( "icon16/map.png", "landmarks" )
-    local settingsPanel = frame:AddTab( "icon16/cog.png", "configure_minimap" )
+    local landmarksPanel = frame:AddTab( "icon16/map.png", L"landmarks", "Panel" )
+    local settingsPanel = frame:AddTab( "icon16/cog.png", L"configure_minimap" )
 
     self.Landmarks:SetupPanel( landmarksPanel )
     self.Config:SetupPanel( settingsPanel )

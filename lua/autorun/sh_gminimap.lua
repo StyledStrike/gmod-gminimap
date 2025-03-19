@@ -1,7 +1,6 @@
 GMinimap = GMinimap or {}
 
 if CLIENT then
-    GMinimap.THEME_COLOR = Color( 34, 142, 66 )
     GMinimap.DATA_DIR = "gminimap/"
 end
 
@@ -57,7 +56,8 @@ if SERVER then
     include( "gminimap/server/main.lua" )
 
     AddCSLuaFile( "includes/modules/styled_draw_utils.lua" )
-    AddCSLuaFile( "includes/modules/styled_theme_utils.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme.lua" )
+    AddCSLuaFile( "includes/modules/styled_theme_tabbed_frame.lua" )
 
     AddCSLuaFile( "gminimap/client/utils.lua" )
     AddCSLuaFile( "gminimap/client/blips.lua" )
@@ -69,23 +69,13 @@ if SERVER then
     AddCSLuaFile( "gminimap/client/radar.lua" )
     AddCSLuaFile( "gminimap/client/world.lua" )
 
-    AddCSLuaFile( "gminimap/client/vgui/tabbed_frame.lua" )
     AddCSLuaFile( "gminimap/client/vgui/radar.lua" )
 end
 
 if CLIENT then
     require( "styled_draw_utils" )
-    require( "styled_theme_utils" )
-
-    GMinimap.Theme = STheme.New( {
-        frameTitleBar = GMinimap.THEME_COLOR,
-        buttonPress = GMinimap.THEME_COLOR,
-        entryHighlight = GMinimap.THEME_COLOR
-    } )
-
-    function GMinimap.ApplyTheme( panel, forceClass )
-        STheme.Apply( GMinimap.Theme, panel, forceClass )
-    end
+    require( "styled_theme" )
+    require( "styled_theme_tabbed_frame" )
 
     include( "gminimap/client/utils.lua" )
     include( "gminimap/client/blips.lua" )
@@ -97,6 +87,5 @@ if CLIENT then
     include( "gminimap/client/radar.lua" )
     include( "gminimap/client/world.lua" )
 
-    include( "gminimap/client/vgui/tabbed_frame.lua" )
     include( "gminimap/client/vgui/radar.lua" )
 end

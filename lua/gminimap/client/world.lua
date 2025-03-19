@@ -184,13 +184,6 @@ function World:CheckTriggers()
     end
 end
 
-concommand.Add(
-    "gminimap_layers",
-    function() World:OpenLayers() end,
-    nil,
-    "Opens the GMinimap layers editor."
-)
-
 net.Receive( "gminimap.world_heights", function()
     World.serverBottom = net.ReadFloat()
     World.serverTop = net.ReadFloat()
@@ -204,23 +197,27 @@ hook.Add( "InitPostEntity", "GMinimap.SetupWorld", function()
     World:LoadFromFile()
 end )
 
+concommand.Add(
+    "gminimap_layers",
+    function() World:OpenLayers() end,
+    nil,
+    "Opens the GMinimap layers editor."
+)
+
 function World:OpenLayers()
     local L = GMinimap.GetLanguageText
-    local ApplyTheme = GMinimap.ApplyTheme
-
-    local CreateSlider = GMinimap.CreateSlider
-    local CreatePropertyLabel = GMinimap.CreatePropertyLabel
+    local ApplyTheme = StyledTheme.Apply
+    local ScaleSize = StyledTheme.ScaleSize
 
     local frame = vgui.Create( "DFrame" )
     frame:SetTitle( L"layers" )
     frame:SetIcon( "icon16/shape_move_forwards.png" )
-    frame:SetSize( 700, 500 )
+    frame:SetSize( ScaleSize( 1200 ), ScaleSize( 700 ) )
     frame:SetSizable( true )
     frame:SetDraggable( true )
     frame:SetDeleteOnClose( true )
-    frame:SetMinWidth( 800 )
-    frame:SetMinHeight( 600 )
-    frame:DockPadding( 4, 28, 4, 4 )
+    frame:SetMinWidth( ScaleSize( 1000 ) )
+    frame:SetMinHeight( ScaleSize( 600 ) )
     frame:Center()
     frame:MakePopup()
 
@@ -231,7 +228,7 @@ function World:OpenLayers()
     end
 
     local menuBar = vgui.Create( "DMenuBar", frame )
-    menuBar:DockMargin( -3, -6, -3, 0 )
+    ApplyTheme( menuBar )
 
     local container = vgui.Create( "DPanel", frame )
     container:SetPaintBackground( false )
@@ -243,15 +240,13 @@ function World:OpenLayers()
     radar:Dock( FILL )
 
     local rightPanel = vgui.Create( "DPanel", frame )
-    rightPanel:SetWide( 200 )
+    rightPanel:SetWide( ScaleSize( 340 ) )
     rightPanel:SetPaintBackground( false )
     rightPanel:Dock( RIGHT )
-    rightPanel:DockMargin( 4, 0, 0, 0 )
+    rightPanel:DockMargin( ScaleSize( 4 ), 0, 0, 0 )
 
     local layerList = vgui.Create( "DScrollPanel", rightPanel )
     layerList:Dock( FILL )
-    layerList.pnlCanvas:DockPadding( 0, 0, 4, 0 )
-
     ApplyTheme( layerList )
 
     local selectedItem
@@ -296,26 +291,28 @@ function World:OpenLayers()
     end
 
     -- Item panel functions
-    local colors = GMinimap.Theme
+    local colors = StyledTheme.colors
 
     local function PaintItem( s, w, h )
-        local bgColor = s._isSelected and colors.buttonPress or colors.frameBorder
+        local bgColor = s._isSelected and colors.buttonPress or colors.panelBackground
 
         surface.SetDrawColor( bgColor:Unpack() )
         surface.DrawRect( 0, 0, w, h )
     end
 
     local function SliderPerformLayout( s )
-        s.Label:SetWide( 45 )
+        s.Label:SetWide( ScaleSize( 80 ) )
     end
 
     -- Item panel creation
+    local spacing = ScaleSize( 4 )
+    local padding = ScaleSize( 6 )
+
     local function AddItem( layer, label, index )
         local item = vgui.Create( "DPanel", layerList )
-        item:SetTall( 100 )
         item:Dock( TOP )
-        item:DockMargin( 0, 4, 0, 0 )
-        item:DockPadding( 2, 2, 2, 2 )
+        item:DockMargin( 0, spacing, 0, 0 )
+        item:DockPadding( padding, 0, padding, padding )
 
         layer.top = layer.top or 5000
         layer.bottom = layer.bottom or -5000
@@ -325,11 +322,10 @@ function World:OpenLayers()
         item.Paint = PaintItem
         item.OnMousePressed = SelectItem
 
-        local title = CreatePropertyLabel( L( "layer_boundaries" ):format( label ), item )
-        title:SetContentAlignment( 5 )
-        title:DockMargin( 0, -4, 0, -4 )
+        local header = StyledTheme.CreateFormHeader( item, L( "layer_boundaries" ):format( label ), 0 )
+        header:SetMouseInputEnabled( false )
 
-        local sliderTop = CreateSlider( item, L"layer_top", layer.top, -20000, 20000, 0, function( value )
+        local sliderTop = StyledTheme.CreateFormSlider( item, L"layer_top", layer.top, -20000, 20000, 0, function( value )
             layer.top = value
             OnItemChanged( item )
         end )
@@ -337,13 +333,16 @@ function World:OpenLayers()
         item._sliderTop = sliderTop
         sliderTop.PerformLayout = SliderPerformLayout
 
-        local sliderBottom = CreateSlider( item, L"layer_bottom", layer.bottom, -20000, 20000, 0, function( value )
+        local sliderBottom = StyledTheme.CreateFormSlider( item, L"layer_bottom", layer.bottom, -20000, 20000, 0, function( value )
             layer.bottom = value
             OnItemChanged( item )
         end )
 
         item._sliderBottom = sliderBottom
         sliderBottom.PerformLayout = SliderPerformLayout
+
+        item:InvalidateLayout( true )
+        item:SizeToChildren( false, true )
 
         return item
     end
@@ -408,56 +407,49 @@ function World:OpenLayers()
         local frameExport = vgui.Create( "DFrame" )
         frameExport:SetTitle( L"export" )
         frameExport:SetIcon( "icon16/page_white_go.png" )
-        frameExport:SetSize( 500, 380 )
+        frameExport:SetSize( ScaleSize( 700 ), ScaleSize( 600 ) )
         frameExport:SetSizable( false )
         frameExport:SetDraggable( true )
         frameExport:SetDeleteOnClose( true )
-        frameExport:DockPadding( 4, 38, 4, 4 )
         frameExport:Center()
         frameExport:MakePopup()
 
         ApplyTheme( frameExport )
 
         local helpLabel1 = vgui.Create( "DLabel", frameExport )
-        helpLabel1:SetTall( 16 )
         helpLabel1:SetText( L"export_tip1" )
-        helpLabel1:SetFont( "ChatFont" )
-        helpLabel1:SetColor( color_white )
         helpLabel1:SetContentAlignment( 5 )
         helpLabel1:Dock( TOP )
+        ApplyTheme( helpLabel1 )
 
         local path = string.format( "%s/data_static/gminimap/%s.json", L"export_tip2", game.GetMap() )
+        padding = ScaleSize( 12 )
 
         local pathEntry = vgui.Create( "DTextEntry", frameExport )
         pathEntry:SetEnabled( false )
         pathEntry:SetValue( path )
         pathEntry:Dock( TOP )
-        pathEntry:DockMargin( 30, 10, 30, 10 )
-
+        pathEntry:DockMargin( padding, padding, padding, padding )
         ApplyTheme( pathEntry )
 
         local helpLabel2 = vgui.Create( "DLabel", frameExport )
-        helpLabel2:SetTall( 16 )
         helpLabel2:SetText( L"export_tip3" )
-        helpLabel2:SetFont( "ChatFont" )
-        helpLabel2:SetColor( color_white )
         helpLabel2:SetContentAlignment( 5 )
         helpLabel2:Dock( TOP )
+        ApplyTheme( helpLabel2 )
 
         local codeEntry = vgui.Create( "DTextEntry", frameExport )
         codeEntry:SetEnabled( false )
         codeEntry:SetMultiline( true )
         codeEntry:SetValue( data )
-        codeEntry:SetTall( 200 )
-        codeEntry:Dock( TOP )
-        codeEntry:DockMargin( 30, 10, 30, 10 )
+        codeEntry:Dock( FILL )
+        codeEntry:DockMargin( padding, padding, padding, padding )
 
         ApplyTheme( codeEntry )
 
         local buttonCopy = vgui.Create( "DButton", frameExport )
-        buttonCopy:SetTall( 20 )
         buttonCopy:SetText( L"copy_code" )
-        buttonCopy:Dock( FILL )
+        buttonCopy:Dock( BOTTOM )
 
         ApplyTheme( buttonCopy )
 
