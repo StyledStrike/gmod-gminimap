@@ -133,6 +133,7 @@ local URLTexturedRectRotated = SDrawUtils.URLTexturedRectRotated
 local Rad, Sin, Cos, Abs = math.rad, math.sin, math.cos, math.abs
 
 local matArrow = Material( "gminimap/heading.png", "smooth ignorez" )
+local cvarDev = GetConVar( "developer" )
 local colorBlack = Color( 0, 0, 0, 255 )
 
 function GMinimap:DrawBlips( radar )
@@ -187,7 +188,10 @@ function GMinimap:DrawBlips( radar )
                 b.position = b.parent:GetPos()
                 b.angle = GetHeading( b.parent )
             else
-                self.Print( "Blip #%d no longer has a valid parent, removing...", i )
+                if cvarDev:GetBool() then
+                    self.Print( "Blip #%d no longer has a valid parent, removing...", i )
+                end
+
                 table.remove( self.blips, i )
             end
         end
