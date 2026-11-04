@@ -232,6 +232,12 @@ hook.Add( "PlayerButtonDown", "GMinimap.DetectHotkeys", function( ply, button )
     end
 end )
 
+local isHUDDrawing = GetConVar( "cl_drawhud" ):GetBool()
+
+cvars.AddChangeCallback( "cl_drawhud", function( _, _, new )
+    isHUDDrawing = tobool( new )
+end )
+
 -- Workaround for key hooks that only run serverside on single-player
 if game.SinglePlayer() then
     net.Receive( "gminimap.key", function()
@@ -245,6 +251,8 @@ local SetColor = surface.SetDrawColor
 local DrawRect = surface.DrawRect
 
 function GMinimap:DrawMinimap( w, h )
+    if not isHUDDrawing then return end
+
     SetColor( self.Config.borderColor:Unpack() )
     DrawRect( 0, 0, w, h )
 
